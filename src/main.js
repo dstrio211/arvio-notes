@@ -168,7 +168,16 @@ async function bootstrapApplication(){
   }
 }
 
-setTimeout(()=>{ void bootstrapApplication(); },900);
+function showStartupFailure(error){
+  console.error("Arvio startup failed",error);
+  splashToAuth();
+  setTimeout(()=>{
+    switchAuthStage("login");
+    setAuthMessage("login","Unable to load your workspace. Check your connection and try signing in again. If this continues, check the Supabase table permissions.");
+  },850);
+}
+
+setTimeout(()=>{ bootstrapApplication().catch(showStartupFailure); },900);
 
 // v3.4.4 — temporarily disable runtime service-worker registration while the
 // production origin is being stabilized. Existing registrations/caches are
@@ -253,9 +262,17 @@ function switchAuthStage(name,{back=false}={}){
   },155);
 }
 
-function launchWorkspaceFromAuth(btn,{newUser=false}={}){
+async function launchWorkspaceFromAuth(btn,{newUser=false}={}){
   if(btn.dataset.launching==="true") return;
   btn.dataset.launching="true";
+  try{
+    await hydrateCloudWorkspace();
+  }catch(error){
+    btn.dataset.launching="false";
+    setAuthMessage(currentAuthStage()?.dataset.authStage || "login","Unable to load your workspace. Check your connection and Supabase table permissions, then try again.");
+    console.error("Arvio workspace load failed",error);
+    return;
+  }
   rippleAuthButton(btn);
   btn.classList.add("is-processing","auth-entry-pressed");
 
@@ -282,7 +299,6 @@ function launchWorkspaceFromAuth(btn,{newUser=false}={}){
       authCard.classList.remove("auth-success-flash");
 
       if(!cloudConfigured) setLocalSession(true);
-      await hydrateCloudWorkspace().catch(()=>{});
       screens.workspace.classList.add("active","workspace-enter");
       activatePage("home");
 

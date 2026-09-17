@@ -19,14 +19,22 @@ function authHeaders(token=null){
   return headers;
 }
 async function request(path,{method="GET",body,token,headers={}}={}){
-  const response=await fetch(`${projectUrl}${path}`,{
-    method,
-    headers:{...authHeaders(token),...headers},
-    body:body===undefined?undefined:JSON.stringify(body)
-  });
-  const data=await response.json().catch(()=>null);
-  if(!response.ok) throw new Error(data?.msg||data?.message||data?.error_description||`Request failed (${response.status})`);
-  return data;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const response=await fetch(`${projectUrl}${path}`,{
+      method, signal:controller.signal,
+      headers:{...authHeaders(token),...headers},
+      body:body===undefined?undefined:JSON.stringify(body)
+    });
+    const data=await response.json().catch(()=>null);
+    if(!response.ok){
+      const error=new Error(data?.msg||data?.message||data?.error_description||`Request failed (${response.status})`);
+      error.status=response.status;
+      throw error;
+    }
+    return data;
+  }finally{ clearTimeout(timer); }
 }
 
 function sessionFromHash(){
@@ -48,7 +56,10 @@ async function ensureFreshSession(){
     const next=await request("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:{refresh_token:session.refresh_token}});
     writeSession(next);
     return next;
-  }catch{writeSession(null);return null}
+  }catch(error){
+    if(error.status===400 || error.status===401){writeSession(null);return null}
+    throw error;
+  }
 }
 
 export const cloudAuth={
@@ -60,7 +71,10 @@ export const cloudAuth={
       session.user=user;
       writeSession(session);
       return session;
-    }catch{writeSession(null);return null}
+    }catch(error){
+      if(error.status===401 || error.status===403){writeSession(null);return null}
+      throw error;
+    }
   },
   async signInWithPassword({email,password}){
     const session=await request("/auth/v1/token?grant_type=password",{method:"POST",body:{email,password}});

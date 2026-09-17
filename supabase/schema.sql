@@ -25,3 +25,7 @@ drop trigger if exists set_arvio_workspace_updated_at on public.arvio_workspaces
 create trigger set_arvio_workspace_updated_at
 before update on public.arvio_workspaces
 for each row execute function public.set_arvio_workspace_updated_at();
+
+-- Required when automatic Data API grants are disabled. RLS still applies.
+grant usage on schema public to authenticated;
+grant select, insert, update on table public.arvio_workspaces to authenticated;
