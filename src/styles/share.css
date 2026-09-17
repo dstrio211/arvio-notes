@@ -2,9 +2,9 @@
    v2.7.0 subsystem ownership refactor.
    Extracted from historical style.css in source order, then owned here. */
 
-.share-btn{padding:9px 12px;border-radius:12px;color:var(--text);background:rgba(210,235,255,.07);}
+.share-btn{border-radius:12px;color:var(--text);background:rgba(210,235,255,.07);}
 .share-btn:hover{box-shadow:0 0 28px var(--blue-glow-strong);}
-@media (max-width:760px){.share-btn{font-size:12px;}}
+@media (max-width:760px){.share-btn{}}
 .share-overlay{
   position:fixed;
   inset:0;
@@ -577,12 +577,12 @@ body.shared-guest-mode .save-status{
   stroke-linejoin:round;
 }
 @media (max-width:760px){#page-note .share-btn{
-    width:40px;
-    min-width:40px;
-    height:40px;
-    padding:0;
-    display:grid !important;
-    place-items:center;
+    
+    
+    
+    
+    
+    
     border-radius:13px;
     color:#b7c4cf;
     border:1px solid rgba(230,245,255,.055);
@@ -615,22 +615,22 @@ body.shared-guest-mode .save-status{
       0 0 22px rgba(76,175,248,.14),
       inset 0 1px 0 rgba(255,255,255,.065);
   }body.keyboard-open #page-note .share-btn{
-    height:38px;
+    
   }body.keyboard-open #page-note .share-btn{
-    width:38px;
-    min-width:38px;
+    
+    
   }}
 @media (max-width:370px){#page-note .share-btn{
-    width:37px;
-    min-width:37px;
+    
+    
   }}
 #page-note .share-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  white-space:nowrap;
-  line-height:1;
+  
+  
+  
+  
+  
+  
 }
 #page-note .share-person-icon{
   flex:none;
@@ -640,11 +640,11 @@ body.shared-guest-mode .save-status{
   line-height:1;
 }
 @media (min-width:761px){#page-note .share-btn{
-    min-height:38px;
-    padding:0 12px;
+    
+    
   }}
 @media (max-width:760px){#page-note .share-btn{
-    display:grid;
+    
   }}
 .share-btn{border-radius:14px !important;}
 .share-sheet{
@@ -801,9 +801,9 @@ body.shared-guest-mode .save-status{
   }.share-secondary, .share-primary{
     font-size:14px !important;
   }}
-#page-note .share-btn{min-height:42px !important;padding:10px 14px !important;border-radius:14px !important;font-size:15px !important;font-weight:630 !important;gap:8px !important;}
+#page-note .share-btn{border-radius:14px !important;}
 #page-note .share-btn svg{width:17px !important;height:17px !important;}
-@media (max-width: 760px){#page-note .share-btn{font-size:14px !important;}}
+@media (max-width: 760px){#page-note .share-btn{}}
 
 /* Canonical sheet ownership */
 .share-overlay{isolation:isolate}

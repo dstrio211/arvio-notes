@@ -1063,7 +1063,8 @@ function createDraftAtPath(parentPath=[]){
     id,
     title,
     body:"",
-    html:"<p>Start writing...</p>",
+    html:"<p><br></p>",
+    titleOnly:parentPath.length===0,
     createdAt:now,
     updatedAt:now,
     lastOpenedAt:now,
@@ -1088,6 +1089,7 @@ function createDraftAtPath(parentPath=[]){
   const titleInput=document.querySelector(".note-title");
   titleInput.value=title;
   document.querySelector(".editor-body").innerHTML=node.html;
+  updateTopicEditorMode(node);
   setNoteSaveStatus?.("saved","Saved");
 
   setTimeout(()=>{
@@ -1273,6 +1275,7 @@ function compactLibraryNodeForAppState(node){
     title:node.title,
     icon:node.icon,
     meta:node.meta,
+    titleOnly:node.titleOnly===true,
     body:String(node.body||"").slice(0,280),
     createdAt:node.createdAt,
     updatedAt:node.updatedAt,
@@ -2054,6 +2057,14 @@ function setNoteBreadcrumb(path){
   });
 }
 
+function updateTopicEditorMode(node){
+  const body=document.querySelector(".editor-body");
+  const hasContent=Boolean(body.textContent.trim() || body.querySelector("img,video,audio,hr,table"));
+  const titleOnly=node?.titleOnly===true && !hasContent;
+  document.querySelector("#page-note").classList.toggle("topic-title-only",titleOnly);
+  body.setAttribute("contenteditable",String(!titleOnly));
+}
+
 function openArvioNote(path,{noteId=null}={}){
   const found=noteId ? findLibraryNodeById(noteId) : findLibraryNode(path);
   if(!found) return;
@@ -2081,12 +2092,15 @@ function openArvioNote(path,{noteId=null}={}){
     "Toyota›Avanza›Specifications":"Key specifications and variants for the Toyota Avanza."
   };
 
-  if(node?.html){
+  if(node?.titleOnly && !node?.html && !node?.body){
+    document.querySelector(".editor-body").innerHTML="<p><br></p>";
+  }else if(node?.html){
     document.querySelector(".editor-body").innerHTML=node.html;
   }else{
     const body=node?.body || bodyByPath[path.join("›")] || `${path.join(" › ")} is open.`;
     document.querySelector(".editor-body").innerHTML=`<p>${escapeHtml(body)}</p><p>Start writing your note here...</p>`;
   }
+  updateTopicEditorMode(node);
   restoreLocalNoteIfPresent(activeLocalNoteKey,legacyLocalNoteKey);
 }
 
@@ -2783,6 +2797,7 @@ function openLibraryItemActions(pathKey,trigger){
           <span class="library-item-action-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 9V3H8v6l-3 3v3h14v-3l-3-3Z M12 15v6"/></svg></span>
           <span><strong>${quickAccessIds.includes(found.node.id)?"Remove from Quick Access":"Add to Quick Access"}</strong><small>Keep your chosen notes close.</small></span>
         </button>
+        ${found.node.titleOnly ? `<button class="library-item-action" type="button" data-library-action="add-content"><span class="library-item-action-icon" aria-hidden="true">✎</span><span><strong>Add content</strong><small>Write inside this topic.</small></span></button>` : ""}
         <button class="library-item-action library-item-add-child" type="button" data-library-action="add-child">
           <span class="library-item-action-icon" aria-hidden="true">＋</span>
           <span><strong>Add nested note</strong><small>Create a new note inside this one.</small></span>
@@ -2880,6 +2895,14 @@ function openLibraryItemActions(pathKey,trigger){
     if(action==="move"){
       closeLibraryItemActions();
       setTimeout(()=>openLibraryMoveSheet(found.path),ARVIO_MOTION.libraryActionClose+30);
+      return;
+    }
+
+    if(action==="add-content"){
+      found.node.titleOnly=false;
+      persistLibraryState();
+      closeLibraryItemActions();
+      setTimeout(()=>openArvioNote(null,{noteId:found.node.id}),ARVIO_MOTION.libraryActionClose+30);
       return;
     }
 
@@ -3470,6 +3493,7 @@ async function restoreLocalNoteIfPresent(key,legacyKey=null){
     found.node.body=local.text || found.node.body;
     found.node.updatedAt=local.updatedAt || found.node.updatedAt;
   }
+  updateTopicEditorMode(found?.node);
   noteRevision=Math.max(noteRevision,Number(local.revision||0));
   savedNoteRevision=noteRevision;
   noteDirty=false;
@@ -4400,6 +4424,40 @@ formatMenu.querySelectorAll("button[data-format]").forEach(b=>{
     else document.execCommand(f==="bold"?"bold":f==="italic"?"italic":"underline");
     arvioHideFixedPopover(formatMenu);
   });
+});
+
+// Preserve a collapsed caret too: the selection toolbar only tracks selected text.
+let lineBreakRange=null;
+document.addEventListener("selectionchange",()=>{
+  const selection=window.getSelection();
+  if(selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)){
+    lineBreakRange=selection.getRangeAt(0).cloneRange();
+  }
+});
+const lineBreakButton=document.querySelector("#line-break-btn");
+lineBreakButton.addEventListener("pointerdown",event=>event.preventDefault());
+lineBreakButton.addEventListener("click",()=>{
+  editor.focus({preventScroll:true});
+  const selection=window.getSelection();
+  if(lineBreakRange && editor.contains(lineBreakRange.commonAncestorContainer)){
+    selection.removeAllRanges();
+    selection.addRange(lineBreakRange);
+  }
+  if(!document.execCommand("insertLineBreak")){
+    // A trailing placeholder keeps the caret on the new line at block end.
+    const range=selection.rangeCount ? selection.getRangeAt(0) : null;
+    let atBlockEnd=false;
+    if(range){
+      const element=range.endContainer.nodeType===3 ? range.endContainer.parentElement : range.endContainer;
+      const block=element.closest("p,div,li,h1,h2,h3,blockquote") || editor;
+      const tail=range.cloneRange();
+      tail.selectNodeContents(block);
+      tail.setStart(range.endContainer,range.endOffset);
+      atBlockEnd=!tail.toString() && !tail.cloneContents().querySelector("img,br");
+    }
+    document.execCommand("insertHTML",false,atBlockEnd ? "<br><br>" : "<br>");
+  }
+  queueLocalSave();
 });
 
 document.querySelector("#undo-btn").addEventListener("click",()=>document.execCommand("undo"));

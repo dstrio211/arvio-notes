@@ -1314,7 +1314,7 @@
 }
 
 #page-library .tree-child{
-  grid-template-columns:12px minmax(0,1fr) !important;
+  grid-template-columns:22px minmax(0,1fr) !important;
 }
 
 #page-library .tree-row > *,
