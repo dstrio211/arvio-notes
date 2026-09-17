@@ -2,7 +2,7 @@
 
 Arvio is a dark, local-first notes workspace for desktop and iPhone / Add to Home Screen use.
 
-## v3.6.0: user-pinned Quick Access
+## v3.7.0: user-pinned Quick Access
 
 Use a note's existing Library **•••** menu to add or remove it from Quick Access. Any parent or nested note is eligible. New pins appear first; other pins retain their order. Sidebar rows show the current title and parent location, and open the note by its stable ID.
 
@@ -45,13 +45,13 @@ To compare CSS ownership with the uploaded baseline:
 python tests/static-audit.py /path/to/ARVIO-GITHUB-READY-v3.5.0.zip
 ```
 
-See `CODE-AUDIT-v3.6.0.md` for ownership review and validation scope, and `DEPLOY-READY-CHECK.md` for release checks. The original v3.5.0 audit is retained as historical documentation.
+See `CODE-AUDIT-v3.7.0.md` for ownership review and validation scope, and `DEPLOY-READY-CHECK.md` for release checks. The original v3.5.0 audit is retained as historical documentation.
 
 ## Architecture and deployment
 
 - Vanilla JavaScript and Vite. GitHub is the source of truth; Vercel deploys `main`.
-- Notes and hierarchy remain local-first. There is no active backend or Supabase dependency.
-- Authentication is a local prototype session, not production authentication.
+- Notes and hierarchy remain local-first with an optional Supabase cloud copy per authenticated user. See `SUPABASE-SETUP.md`.
+- Authentication uses Supabase email and password when both Vercel environment variables are present. It remains a local prototype session when they are absent.
 - Sharing UI has no cross-user persistence.
 - Service-worker fetch interception remains disabled. Existing recovery behavior is preserved.
 - Mobile Home / Library / Profile navigation, safe areas and logo assets are preserved.

@@ -12,6 +12,7 @@ import "./styles/dialogs.css";
 import "./styles/ui-system.css";
 import "./styles/page-layout.css";
 import "./styles/motion.css";
+import { cloudConfigured, cloudAuth, cloudTable } from "./supabase.js";
 
 const screens = {
   loading: document.querySelector("#loading-screen"),
@@ -142,17 +143,32 @@ function splashToWorkspace(){
   },1120);
 }
 
-// v3.5.0 local-first reset: Supabase was intentionally removed.
-// Auth is a local prototype gate only; notes remain in IndexedDB/localStorage.
-setTimeout(()=>{
-  const profile=readLocalProfile();
-  if(profile.email) applyPrototypeEmail(profile.email);
-  if(profile.displayName) applyPrototypeDisplayName(profile.displayName);
-  else setAvatarAccent("David");
+async function bootstrapApplication(){
+  await hydrateLibraryStateFromIndexedDB();
+  if(!cloudConfigured){
+    const profile=readLocalProfile();
+    if(profile.email) applyPrototypeEmail(profile.email);
+    if(profile.displayName) applyPrototypeDisplayName(profile.displayName);
+    else setAvatarAccent("David");
+    if(hasLocalSession()) splashToWorkspace();
+    else splashToAuth();
+    return;
+  }
 
-  if(hasLocalSession()) splashToWorkspace();
-  else splashToAuth();
-},900);
+  const session=await cloudAuth.getSession();
+  if(!session?.user){ splashToAuth(); return; }
+  await hydrateCloudWorkspace();
+  const name=session.user.user_metadata?.display_name || "";
+  applyPrototypeEmail(session.user.email || "");
+  updateLocalProfile({email:session.user.email || "",displayName:name});
+  if(name){ applyPrototypeDisplayName(name); splashToWorkspace(); }
+  else{
+    splashToAuth();
+    setTimeout(()=>switchAuthStage("nickname"),830);
+  }
+}
+
+setTimeout(()=>{ void bootstrapApplication(); },900);
 
 // v3.4.4 — temporarily disable runtime service-worker registration while the
 // production origin is being stabilized. Existing registrations/caches are
@@ -258,14 +274,15 @@ function launchWorkspaceFromAuth(btn,{newUser=false}={}){
     authCard.classList.add("auth-success-flash");
     screens.auth.classList.add("auth-exit");
 
-    setTimeout(()=>{
+    setTimeout(async()=>{
       screens.auth.classList.remove("active","auth-exit");
       btn.classList.remove("is-processing","auth-entry-pressed","is-opening-blue");
       btn.dataset.launching="false";
       label.textContent=original;
       authCard.classList.remove("auth-success-flash");
 
-      setLocalSession(true);
+      if(!cloudConfigured) setLocalSession(true);
+      await hydrateCloudWorkspace().catch(()=>{});
       screens.workspace.classList.add("active","workspace-enter");
       activatePage("home");
 
@@ -306,17 +323,28 @@ document.querySelectorAll("[data-auth-back]").forEach(btn=>{
   btn.addEventListener("click",()=>switchAuthStage(btn.dataset.authBack,{back:true}));
 });
 
-document.querySelector("#login-form").addEventListener("submit",e=>{
+document.querySelector("#login-form").addEventListener("submit",async e=>{
   e.preventDefault();
   clearAuthMessages();
   const email=document.querySelector("#login-email").value.trim();
-  if(!email){
-    setAuthMessage("login","Enter an email to continue.");
+  const password=document.querySelector("#login-password").value;
+  if(!email || (cloudConfigured && !password)){
+    setAuthMessage("login","Enter your email and password to continue.");
     return;
   }
-  applyPrototypeEmail(email);
-  updateLocalProfile({email});
-  launchWorkspaceFromAuth(document.querySelector("#login-submit"));
+  try{
+    if(cloudConfigured){
+      const session=await cloudAuth.signInWithPassword({email,password});
+      const name=session.user?.user_metadata?.display_name || "";
+      applyPrototypeEmail(session.user?.email || email);
+      if(name) applyPrototypeDisplayName(name);
+      updateLocalProfile({email:session.user?.email || email,displayName:name});
+    }else{
+      applyPrototypeEmail(email);
+      updateLocalProfile({email});
+    }
+    launchWorkspaceFromAuth(document.querySelector("#login-submit"));
+  }catch(error){ setAuthMessage("login",error.message || "Unable to sign in."); }
 });
 
 document.querySelector("#signup-form").addEventListener("submit",e=>{
@@ -343,16 +371,23 @@ document.querySelector("#signup-form").addEventListener("submit",e=>{
     label.classList.remove("copy-transition");
   },120);
 
-  setTimeout(()=>{
-    document.querySelector("#confirm-email-copy").textContent=signupEmail;
-    applyPrototypeEmail(signupEmail);
-    updateLocalProfile({email:signupEmail});
-    btn.classList.remove("is-processing");
-    btn.disabled=false;
-    btn.dataset.creating="false";
-    label.textContent="Create account";
-    switchAuthStage("confirm");
-  },650);
+  const finish=async()=>{
+    try{
+      if(cloudConfigured){
+        const password=document.querySelector("#signup-password").value;
+        if(!password) throw new Error("Enter a password to create your account.");
+        await cloudAuth.signUp({email:signupEmail,password,redirectTo:location.origin});
+      }
+      document.querySelector("#confirm-email-copy").textContent=signupEmail;
+      applyPrototypeEmail(signupEmail);
+      updateLocalProfile({email:signupEmail});
+      switchAuthStage("confirm");
+    }catch(error){ setAuthMessage("signup",error.message || "Unable to create your account."); }
+    finally{
+      btn.classList.remove("is-processing"); btn.disabled=false; btn.dataset.creating="false"; label.textContent="Create account";
+    }
+  };
+  setTimeout(()=>void finish(),650);
 });
 
 const confirmEmailButton=document.querySelector("#simulate-confirm");
@@ -378,13 +413,15 @@ confirmEmailButton.addEventListener("click",e=>{
     label.classList.remove("copy-transition");
   },135);
 
-  setTimeout(()=>{
+  setTimeout(async()=>{
+    if(cloudConfigured && !(await cloudAuth.getSession())){
+      setAuthMessage("confirm","Open the confirmation email, then return here and press this button again.");
+    }else{
+      switchAuthStage("nickname");
+    }
     btn.classList.remove("is-processing");
-    switchAuthStage("nickname");
     setTimeout(()=>{
-      btn.classList.remove("is-confirmed");
-      btn.disabled=false;
-      btn.dataset.confirming="false";
+      btn.classList.remove("is-confirmed"); btn.disabled=false; btn.dataset.confirming="false";
       if(confirmDifferentEmail) confirmDifferentEmail.disabled=false;
       label.textContent="I’ve confirmed my email";
     },320);
@@ -414,17 +451,15 @@ function applyPrototypeDisplayName(name){
   setAvatarAccent(clean);
 }
 
-document.querySelector("#nickname-form").addEventListener("submit",e=>{
-  e.preventDefault();
-  clearAuthMessages();
+document.querySelector("#nickname-form").addEventListener("submit",async e=>{
+  e.preventDefault(); clearAuthMessages();
   const name=document.querySelector("#nickname-input").value.trim();
-  if(!name){
-    setAuthMessage("nickname","Enter a display name to continue.");
-    return;
-  }
-  applyPrototypeDisplayName(name);
-  updateLocalProfile({displayName:name});
-  launchWorkspaceFromAuth(document.querySelector("#nickname-submit"),{newUser:true});
+  if(!name){ setAuthMessage("nickname","Enter a display name to continue."); return; }
+  try{
+    if(cloudConfigured) await cloudAuth.updateUser({display_name:name});
+    applyPrototypeDisplayName(name); updateLocalProfile({displayName:name});
+    launchWorkspaceFromAuth(document.querySelector("#nickname-submit"),{newUser:true});
+  }catch(error){ setAuthMessage("nickname",error.message || "Unable to save your display name."); }
 });
 
 
@@ -1248,12 +1283,58 @@ function snapshotLibraryState(){
   };
 }
 
+let cloudWorkspaceHydrated=false;
+let cloudWorkspaceSyncTimer=0;
+let cloudWorkspaceSyncChain=Promise.resolve();
+
+async function cloudWorkspacePayload(snapshot=snapshotLibraryState()){
+  let noteRecords=[];
+  try{ noteRecords=await getAllArvioStoreRecords(ARVIO_NOTE_STORE); }catch{}
+  return {state:snapshot,notes:noteRecords,version:1};
+}
+
+function scheduleCloudWorkspaceSync(snapshot){
+  if(!cloudConfigured || !cloudWorkspaceHydrated) return;
+  clearTimeout(cloudWorkspaceSyncTimer);
+  cloudWorkspaceSyncTimer=setTimeout(()=>{
+    cloudWorkspaceSyncChain=cloudWorkspaceSyncChain.then(async()=>{
+      const session=await cloudAuth.getSession();
+      if(!session?.user?.id) return;
+      const payload=await cloudWorkspacePayload(snapshot);
+      await cloudTable("arvio_workspaces",{
+        method:"POST",query:"?on_conflict=owner_id",
+        body:{owner_id:session.user.id,payload},
+        headers:{Prefer:"resolution=merge-duplicates,return=minimal"}
+      });
+    }).catch(()=>{});
+  },450);
+}
+
+async function hydrateCloudWorkspace(){
+  if(!cloudConfigured || cloudWorkspaceHydrated) return;
+  const session=await cloudAuth.getSession();
+  if(!session?.user?.id) return;
+  const rows=await cloudTable("arvio_workspaces",{query:"?select=payload&limit=1"});
+  const remote=rows?.[0]?.payload;
+  if(remote?.state?.tree && Array.isArray(remote.state.tree)){
+    await writeArvioStore(ARVIO_APP_STATE_STORE,remote.state);
+    if(Array.isArray(remote.notes)){
+      for(const record of remote.notes){ if(record?.key) await writeArvioStore(ARVIO_NOTE_STORE,record); }
+    }
+    libraryStateHydrated=false;
+    await hydrateLibraryStateFromIndexedDB();
+  }
+  cloudWorkspaceHydrated=true;
+  if(!remote?.state?.tree) scheduleCloudWorkspaceSync();
+}
+
 function persistLibraryStateNow(){
   const snapshot=snapshotLibraryState();
   // Serialize snapshots so a slow older write cannot overwrite a pin change.
   const write=async()=>{
     try{
       await writeArvioStore(ARVIO_APP_STATE_STORE,snapshot);
+      scheduleCloudWorkspaceSync(snapshot);
       try{
         localStorage.removeItem(ARVIO_LIBRARY_STATE_KEY);
         localStorage.removeItem(ARVIO_LIBRARY_TRASH_KEY);
@@ -2377,7 +2458,7 @@ const libraryFilter=document.querySelector("#library-filter");
 
 renderLibrary();
 renderHomeDashboard();
-queueMicrotask(()=>hydrateLibraryStateFromIndexedDB());
+
 
 librarySearch.addEventListener("input",e=>{
   renderLibrary(e.target.value);
@@ -4735,7 +4816,9 @@ logoutConfirm?.addEventListener("click",()=>{
 
   const label=logoutConfirm.querySelector("span");
   label.style.opacity="0";
-  const signOutRequest=Promise.resolve({error:null});
+  const signOutRequest=cloudConfigured
+    ? cloudAuth.signOut().then(()=>({error:null})).catch(error=>({error}))
+    : Promise.resolve({error:null});
 
   setTimeout(()=>{
     label.textContent="Logging out";
