@@ -381,9 +381,6 @@
                     <path d="M18 11h-6.5A5.5 5.5 0 0 0 6 16.5V17"></path>
                   </svg>
                 </button>
-                <button class="icon-btn" id="line-break-btn" type="button" aria-label="Insert line break" title="New line (Shift+Enter)">
-                  <svg class="note-action-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v8H5m5-5-5 5 5 5"></path></svg>
-                </button>
               </div>
             </div>
 
@@ -414,6 +411,7 @@
 
           <div class="command-menu" id="command-menu" hidden>
             <div class="command-title">ADD TO NOTE</div>
+            <button type="button" data-command="paragraph-spacing" role="switch" aria-checked="true" aria-label="Paragraph spacing"><span class="return-mode-state" aria-hidden="true">ON</span><span><strong>Paragraph spacing</strong><small>Return starts a new paragraph</small></span></button>
             <button data-command="link"><span>🔗</span><span><strong>Link</strong><small>Connect another Arvio note</small></span></button>
             <button data-command="image"><span>🖼</span><span><strong>Image</strong><small>Add a photo to your note</small></span></button>
             <button data-command="highlight"><span>🖍</span><span><strong>Highlight</strong><small>Highlight selected text</small></span></button>

@@ -3774,10 +3774,28 @@ function placeCommandNearCaret(){
   commandMenu.style.top=`${Math.max(90,rect.bottom-pageRect.top+10)}px`;
 }
 
+const MOBILE_SPACING_KEY="arvioMobileParagraphSpacing";
+let mobileParagraphSpacing=true;
+try{ mobileParagraphSpacing=localStorage.getItem(MOBILE_SPACING_KEY)!=="off"; }catch{}
+function mobileReturnMode(){
+  return window.matchMedia("(max-width:760px) and (any-pointer:coarse)").matches;
+}
+function renderMobileSpacingCommand(){
+  const button=commandMenu.querySelector('[data-command="paragraph-spacing"]');
+  button.setAttribute("aria-checked",String(mobileParagraphSpacing));
+  button.querySelector(".return-mode-state").textContent=mobileParagraphSpacing ? "ON" : "OFF";
+  button.querySelector("small").textContent=mobileParagraphSpacing
+    ? "Return starts a new paragraph"
+    : "Return starts a new line (Shift+Enter)";
+}
+renderMobileSpacingCommand();
+
 function filterSlashCommands(term=""){
+  renderMobileSpacingCommand();
   const buttons=[...commandMenu.querySelectorAll("[data-command]")];
 
   const meta={
+    "paragraph-spacing":{title:"paragraph spacing",keywords:["spacing","return","enter","shift","line","paragraph"],index:5},
     link:{title:"link", keywords:["link","internal","note","connect"], index:0},
     image:{title:"image", keywords:["image","photo","picture"], index:1},
     highlight:{title:"highlight", keywords:["highlight","marker","stabilo"], index:2},
@@ -3808,7 +3826,7 @@ function filterSlashCommands(term=""){
     .map(btn=>{
       const cmd=btn.dataset.command;
       const score=scoreCommand(cmd, term);
-      const matches=!term || score>0;
+      const matches=(!term || score>0) && (cmd!=="paragraph-spacing" || mobileReturnMode());
       btn.classList.toggle("command-hidden", !matches);
       btn.classList.remove("keyboard-active");
       return {btn, cmd, score, matches, index:meta[cmd]?.index ?? 99};
@@ -4338,6 +4356,23 @@ editorBody.addEventListener("paste",e=>{
 
 
 function applyCommand(cmd){
+  if(cmd==="paragraph-spacing"){
+    if(!mobileReturnMode()) return;
+    editorBody.focus({preventScroll:true});
+    if(activeSlashRange && editorBody.contains(activeSlashRange.commonAncestorContainer)){
+      const selection=window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(activeSlashRange);
+      document.execCommand("delete");
+    }
+    activeSlashRange=null;
+    mobileParagraphSpacing=!mobileParagraphSpacing;
+    try{localStorage.setItem(MOBILE_SPACING_KEY,mobileParagraphSpacing ? "on" : "off");}catch{}
+    renderMobileSpacingCommand();
+    arvioHideFixedPopover(commandMenu);
+    queueLocalSave();
+    return;
+  }
   if(cmd==="highlight"){
     openHighlightPalette();
     return;
@@ -4426,23 +4461,9 @@ formatMenu.querySelectorAll("button[data-format]").forEach(b=>{
   });
 });
 
-// Preserve a collapsed caret too: the selection toolbar only tracks selected text.
-let lineBreakRange=null;
-document.addEventListener("selectionchange",()=>{
+// Only mobile paragraph insertion is remapped. Desktop Enter/Shift+Enter stay native.
+function insertMobileSoftBreak(){
   const selection=window.getSelection();
-  if(selection?.rangeCount && editor.contains(selection.anchorNode) && editor.contains(selection.focusNode)){
-    lineBreakRange=selection.getRangeAt(0).cloneRange();
-  }
-});
-const lineBreakButton=document.querySelector("#line-break-btn");
-lineBreakButton.addEventListener("pointerdown",event=>event.preventDefault());
-lineBreakButton.addEventListener("click",()=>{
-  editor.focus({preventScroll:true});
-  const selection=window.getSelection();
-  if(lineBreakRange && editor.contains(lineBreakRange.commonAncestorContainer)){
-    selection.removeAllRanges();
-    selection.addRange(lineBreakRange);
-  }
   if(!document.execCommand("insertLineBreak")){
     // A trailing placeholder keeps the caret on the new line at block end.
     const range=selection.rangeCount ? selection.getRangeAt(0) : null;
@@ -4458,6 +4479,12 @@ lineBreakButton.addEventListener("click",()=>{
     document.execCommand("insertHTML",false,atBlockEnd ? "<br><br>" : "<br>");
   }
   queueLocalSave();
+}
+editorBody.addEventListener("beforeinput",event=>{
+  if(!mobileReturnMode() || mobileParagraphSpacing || event.isComposing ||
+     event.inputType!=="insertParagraph" || !event.cancelable || event.defaultPrevented) return;
+  event.preventDefault();
+  insertMobileSoftBreak();
 });
 
 document.querySelector("#undo-btn").addEventListener("click",()=>document.execCommand("undo"));

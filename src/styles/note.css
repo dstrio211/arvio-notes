@@ -1240,7 +1240,7 @@
   line-height:1.2;
 }
 #page-note .note-breadcrumb .crumb{padding:4px 4px !important;}
-#page-note #line-break-btn{display:none !important;}
+
 /* Note toolbar owns Share geometry on desktop and mobile. */
 #page-note .note-share-top{
   display:inline-flex;
@@ -1301,7 +1301,7 @@
       max(15px,env(safe-area-inset-right))
       8px
       max(15px,env(safe-area-inset-left)) !important;
-  }#page-note #line-break-btn{display:grid !important;}#page-note .note-toolbar-left{gap:6px;}#page-note .note-breadcrumb{
+  }#page-note .note-toolbar-left{gap:6px;}#page-note .note-breadcrumb{
     min-height:28px;
     gap:2px;
   }#page-note .note-breadcrumb .crumb, #page-note .note-breadcrumb .sep{
@@ -1424,5 +1424,14 @@
 }
 
 /* Title-only topics retain the same editor when content is explicitly added. */
-#page-note.topic-title-only .editor-body,
-#page-note.topic-title-only #line-break-btn{display:none !important;}
+#page-note.topic-title-only .editor-body{display:none !important;}
+
+/* Mobile Return preference belongs to the existing slash command menu. */
+#command-menu [data-command="paragraph-spacing"] .return-mode-state{
+  font-size:10px;
+  font-weight:700;
+  color:var(--muted);
+}
+#command-menu [data-command="paragraph-spacing"][aria-checked="true"] .return-mode-state{
+  color:var(--blue);
+}
