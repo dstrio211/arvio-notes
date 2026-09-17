@@ -1,0 +1,67 @@
+{
+  "css_files": 14,
+  "css_errors": [],
+  "duplicate_html_ids": [],
+  "duplicate_top_level_function_names": [],
+  "malformed_important": 0,
+  "quick_access_css_owners": [
+    "style.css"
+  ],
+  "quick_access_same_scope_property_redefinitions": [],
+  "cross_file_exact_selector_property_owners": {
+    "('.logout-sheet h2', 'font-size', ('media (max-width:760px)',))": [
+      "dialogs.css",
+      "ui-system.css"
+    ],
+    "('#page-home', 'padding-top', ('media (max-width:760px)',))": [
+      "home-profile.css",
+      "page-layout.css"
+    ],
+    "('#page-profile', 'padding-top', ('media (max-width:760px)',))": [
+      "home-profile.css",
+      "page-layout.css"
+    ],
+    "('#page-profile > .eyebrow', 'font-size', ())": [
+      "home-profile.css",
+      "page-layout.css"
+    ],
+    "('#page-profile > .eyebrow', 'letter-spacing', ())": [
+      "home-profile.css",
+      "page-layout.css"
+    ],
+    "('#page-profile > .eyebrow', 'font-size', ('media (max-width:760px)',))": [
+      "home-profile.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'font-size', ())": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'line-height', ())": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'font-weight', ())": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'letter-spacing', ())": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'margin', ())": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'font-size', ('media (max-width:760px)',))": [
+      "library.css",
+      "page-layout.css"
+    ],
+    "('#page-library .library-head .eyebrow', 'margin-bottom', ('media (max-width:760px)',))": [
+      "library.css",
+      "page-layout.css"
+    ]
+  },
+  "new_cross_file_owners_vs_baseline": {},
+  "static_quick_access_buttons": false
+}

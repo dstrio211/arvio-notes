@@ -1,0 +1,22 @@
+Arvio v3.6.0 browser verification
+Date: 2026-09-17
+Engine: headless Chromium 153.0.8010.0 via Playwright 1.62.1
+Environment: Linux, Node 24.19.0. Managed Chromium executable supplied through test environment variables.
+
+Regression suite (tests/quick-access.mjs), final run: exit 0
+PASS empty state, top-level/nested pinning, newest-first order and IndexedDB reload
+PASS rename/move retain ID and order, editor rename updates rows, switching pins saves edits, Home clears active pin
+PASS duplicate stays unpinned, subtree Trash/reload/restore preserves order, permanent subtree deletion cleans pins
+PASS restore follows parent ID and avoids name collision, remove/re-pin moves only that pin to top
+PASS pin navigation selects exact stable ID even when titles/paths collide
+PASS desktop sidebar scrolling/truncation, long-title sheet bounds and short viewport scrolling
+PASS 390/375/320px mobile and landscape/short viewport sheet bounds, reachable controls, bottom nav and returning session
+PASS localStorage fallback persists order, hidden subtree pins, restoration and permanent cleanup after reload
+PASS no browser JavaScript errors
+
+Production smoke (tests/production-smoke.mjs), final run: exit 0
+PASS production bundle: touch pin control, persistence after reload, unique DOM IDs, no test hook and no runtime errors
+
+Visual inspection: desktop Quick Access, desktop long-title action sheet and 390px mobile action sheet PNGs inspected. New pin icon uses SVG to avoid missing-font glyphs. Long action-sheet headings clamp at three lines. Sidebar titles/location truncate.
+
+Boundaries: viewport emulation and touch emulation are not physical iPhone Safari or installed-PWA testing. No deployment or remote GitHub push occurred.
