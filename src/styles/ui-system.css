@@ -96,8 +96,7 @@ body #workspace #page-library .library-head{margin-bottom:var(--ui-flow-gap)!imp
 #workspace #page-note :is(.breadcrumb-btn,.share-btn){font-size:14px!important;line-height:1.25!important}
 #workspace #page-note .note-title{font-size:50px!important;line-height:1!important;letter-spacing:-.045em!important}
 #workspace #page-note .save-status{margin:8px 0 26px!important;font-size:12px!important;line-height:1.4!important}
-#workspace #page-note .editor-body{font-size:18px!important;line-height:1.75!important}
-#workspace #page-note .editor-body p{margin-bottom:18px!important}
+#workspace #page-note .editor-body{}
 
 /* Share */
 .share-sheet :is(.share-title,h2){font-size:var(--ui-dialog-title)!important;line-height:1.15!important}
@@ -134,7 +133,7 @@ body .logout-sheet p{font-size:var(--ui-dialog-body)!important;line-height:1.5!i
   #workspace #page-create .create-note-choices{margin-top:26px!important;gap:12px!important}
   #workspace #page-create .create-choice{min-height:142px!important;padding:19px!important}
   #workspace #page-note .note-title{font-size:clamp(36px,9.6vw,40px)!important}
-  #workspace #page-note .editor-body{font-size:17px!important;line-height:1.72!important}
+  #workspace #page-note .editor-body{}
   .share-sheet :is(.share-title,h2),.logout-sheet h2{font-size:var(--ui-dialog-title)!important}
   .share-sheet :is(.share-primary,.share-secondary),.logout-sheet :is(.logout-cancel,.logout-confirm){min-height:54px!important;font-size:16px!important}
 }

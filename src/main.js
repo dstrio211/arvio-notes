@@ -12,6 +12,7 @@ import "./styles/dialogs.css";
 import "./styles/ui-system.css";
 import "./styles/page-layout.css";
 import "./styles/motion.css";
+import "./styles/note-content.css";
 import { cloudConfigured, cloudAuth, cloudTable } from "./supabase.js";
 
 const screens = {
@@ -3770,6 +3771,7 @@ function getSlashContext(){
 }
 
 function placeCommandNearCaret(){
+  if(window.matchMedia("(max-width:760px)").matches){ updateSlashViewport(); return; }
   const sel=window.getSelection();
   if(!sel || !sel.rangeCount) return;
   const caret=sel.getRangeAt(0).cloneRange();
@@ -3886,14 +3888,41 @@ document.addEventListener("selectionchange",()=>{
   if(document.activeElement===editorBody) scheduleSlashRefresh();
 });
 function updateSlashViewport(){
+  if(!window.matchMedia("(max-width:760px)").matches){
+    if(commandMenu.hasAttribute("popover") && commandMenu.matches(":popover-open")) commandMenu.hidePopover();
+    commandMenu.removeAttribute("popover");
+    return;
+  }
   const vv=window.visualViewport;
-  const bottom=Math.max(0,window.innerHeight-((vv?.offsetTop || 0)+(vv?.height || window.innerHeight)));
-  commandMenu.style.setProperty("--slash-bottom",`${bottom+10}px`);
-  commandMenu.style.setProperty("--slash-max-height",`${Math.max(60,(vv?.height || window.innerHeight)-80)}px`);
+  const top=vv?.offsetTop || 0;
+  const left=vv?.offsetLeft || 0;
+  const height=vv?.height || window.innerHeight;
+  const width=vv?.width || window.innerWidth;
+  const safeTop=Math.max(10,getArvioSafeTopInset());
+  const room=Math.max(0,height-safeTop-20);
+  commandMenu.style.setProperty("--slash-max-height",`${Math.min(390,room)}px`);
+  commandMenu.style.setProperty("--slash-left",`${left+10}px`);
+  commandMenu.style.setProperty("--slash-width",`${Math.max(0,width-20)}px`);
+  // A manual top-layer popover escapes transformed/clipped workspace ancestors
+  // without moving the element or adding another menu or animation system.
+  if(typeof commandMenu.showPopover==="function"){
+    commandMenu.setAttribute("popover","manual");
+    if(!commandMenu.hidden && !commandMenu.matches(":popover-open")) commandMenu.showPopover();
+  }
+  const menuHeight=Math.min(commandMenu.offsetHeight || 390,room);
+  commandMenu.style.setProperty("--slash-top",`${Math.max(top+safeTop,top+height-menuHeight-10)}px`);
 }
-window.visualViewport?.addEventListener("resize",updateSlashViewport);
-window.visualViewport?.addEventListener("scroll",updateSlashViewport);
-window.addEventListener("resize",updateSlashViewport);
+let slashViewportFrame=0;
+function scheduleSlashViewport(){
+  updateSlashViewport();
+  cancelAnimationFrame(slashViewportFrame);
+  slashViewportFrame=requestAnimationFrame(updateSlashViewport);
+}
+window.visualViewport?.addEventListener("resize",scheduleSlashViewport);
+window.visualViewport?.addEventListener("scroll",scheduleSlashViewport);
+window.addEventListener("resize",scheduleSlashViewport);
+window.addEventListener("scroll",scheduleSlashViewport,{passive:true});
+editorBody.addEventListener("focus",scheduleSlashViewport);
 updateSlashViewport();
 
 
@@ -4554,6 +4583,7 @@ function arvioShowFixedPopover(el){
   if(!el) return;
   clearTimeout(el._arvioHideTimer);
   el.hidden=false;
+  if(el===commandMenu) updateSlashViewport();
   el.classList.remove("is-closing","bubble-bloom");
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
@@ -4568,6 +4598,7 @@ function arvioHideFixedPopover(el){
   el.classList.add("is-closing");
   clearTimeout(el._arvioHideTimer);
   el._arvioHideTimer=setTimeout(()=>{
+    if(el===commandMenu && el.hasAttribute("popover") && el.matches(":popover-open")) el.hidePopover();
     el.hidden=true;
     el.classList.remove("is-closing");
   },210);

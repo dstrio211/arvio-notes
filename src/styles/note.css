@@ -9,8 +9,7 @@
 .editor{max-width:760px;margin:0 auto;}
 .note-title{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:44px;font-weight:650;letter-spacing:-.045em;}
 .save-status{font-size:11px;color:#77818d;margin:8px 0 30px;}
-.editor-body{min-height:55vh;outline:0;font-size:18px;line-height:1.8;color:#dce1e8;}
-.editor-body p{margin:0 0 18px;}
+.editor-body{min-height:55vh;outline:0;}
 .editor-body:focus{caret-color:var(--blue);}
 @media (max-width:760px){.note-title{font-size:34px;}.note-toolbar{margin-bottom:25px;}.note-actions .icon-btn{display:none;}}
 .breadcrumb-btn{font-size:12px;color:var(--muted);padding:7px 9px;border-radius:9px;}
@@ -18,9 +17,6 @@
 .breadcrumb-btn span{color:#5f6976;padding:0 4px;}
 .note-actions{display:flex;gap:4px;}
 .editor{max-width:790px;}
-.editor-body{font-weight:430;}
-.editor-body p{min-height:1.8em;}
-.editor-body strong{font-weight:680;}
 .child-notes{margin-top:64px;padding-top:25px;border-top:1px solid var(--border);}
 .child-note{width:100%;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;text-align:left;padding:13px 10px;border-radius:13px;transition:.2s;}
 .child-note:hover{background:rgba(70,171,255,.07);box-shadow:0 0 25px rgba(70,171,255,.16);}
@@ -37,8 +33,7 @@
 .format-menu{position:absolute;z-index:31;display:flex;gap:3px;padding:6px;border:1px solid rgba(143,210,255,.16);border-radius:12px;background:rgba(11,15,20,.96);backdrop-filter:blur(18px);box-shadow:0 18px 45px rgba(0,0,0,.5),0 0 28px rgba(70,171,255,.18);}
 .format-menu button{width:31px;height:31px;border-radius:8px;color:#dfe9f3;}
 .format-menu button:hover{background:rgba(70,171,255,.13);color:var(--blue);box-shadow:0 0 17px rgba(70,171,255,.18);}
-.editor-body mark{background:rgba(255,221,105,.36);color:inherit;border-radius:3px;padding:0 .04em;}
-@media (max-width:760px){.note-toolbar{position:relative;top:0;z-index:10;padding:8px 0;margin-left:-4px;margin-right:-4px;}.breadcrumb-btn{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.editor{max-width:none;}.editor-body{font-size:17px;line-height:1.75;}.child-notes{margin-top:50px;}.note-actions .icon-btn{display:grid;}.command-menu{top:155px;}}
+@media (max-width:760px){.note-toolbar{position:relative;top:0;z-index:10;padding:8px 0;margin-left:-4px;margin-right:-4px;}.breadcrumb-btn{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.editor{max-width:none;}.child-notes{margin-top:50px;}.note-actions .icon-btn{display:grid;}.command-menu{top:155px;}}
 .highlight-palette{position:absolute;z-index:40;display:flex;align-items:center;gap:5px;padding:7px 8px;border:1px solid rgba(143,210,255,.17);border-radius:13px;background:rgba(10,14,19,.97);backdrop-filter:blur(18px);box-shadow:0 18px 50px rgba(0,0,0,.54),0 0 32px rgba(70,171,255,.18);animation:paletteIn .16s ease-out;}
 .highlight-swatch{position:relative;width:25px;height:25px;border-radius:50%;border:1px solid rgba(255,255,255,.10);transition:transform .16s,box-shadow .18s;}
 .highlight-swatch::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--swatch);opacity:.62;}
@@ -625,14 +620,6 @@
   }body.note-route-active #page-note{
     padding-bottom:calc(40px + env(safe-area-inset-bottom));
   }#page-note .command-menu{
-    position:fixed !important;
-    left:max(12px,env(safe-area-inset-left)) !important;
-    right:max(12px,env(safe-area-inset-right)) !important;
-    top:auto !important;
-    bottom:calc(var(--arvio-keyboard-inset) + 12px) !important;
-    width:auto !important;
-    max-width:none !important;
-    max-height:min(48dvh,390px);
     overflow-y:auto;
     overscroll-behavior:contain;
     padding:10px;
@@ -648,6 +635,17 @@
       0 0 40px rgba(64,171,255,.13),
       inset 0 1px 0 rgba(255,255,255,.07);
     transform-origin:50% 100% !important;
+    position:fixed !important;
+    color:var(--text);
+    left:var(--slash-left,10px) !important;
+    right:auto !important;
+    top:var(--slash-top,10px) !important;
+    bottom:auto !important;
+    width:var(--slash-width,calc(100vw - 20px)) !important;
+    max-width:none !important;
+    max-height:var(--slash-max-height,390px) !important;
+    margin:0 !important;
+    z-index:180 !important;
   }#page-note .command-menu:not([hidden]){
     scrollbar-width:none;
   }#page-note .command-menu::-webkit-scrollbar{
@@ -822,25 +820,10 @@
   }#page-note .editor-body{
     min-height:calc(100dvh - 210px);
     padding-bottom:calc(54px + env(safe-area-inset-bottom));
-    font-size:17.5px;
-    line-height:1.76;
-    letter-spacing:-.006em;
-    color:#d9e0e7;
     caret-color:#c8eaff;
     -webkit-user-select:text;
     user-select:text;
     -webkit-touch-callout:default;
-    overflow-wrap:anywhere;
-  }#page-note .editor-body p{
-    margin:0 0 20px;
-    min-height:1.76em;
-  }#page-note .editor-body h2{
-    margin:28px 0 12px;
-    font-size:25px;
-    line-height:1.24;
-    letter-spacing:-.03em;
-  }#page-note .editor-body ul{
-    padding-left:23px;
   }body.keyboard-open #page-note .note-toolbar{
     min-height:54px;
     padding-top:6px;
@@ -896,14 +879,6 @@
     border-color:rgba(151,216,255,.12);
     box-shadow:0 0 20px rgba(78,177,245,.14);
   }#page-note .command-menu{
-    position:fixed !important;
-    left:max(10px,env(safe-area-inset-left)) !important;
-    right:max(10px,env(safe-area-inset-right)) !important;
-    top:auto !important;
-    bottom:calc(var(--arvio-keyboard-inset) + 10px) !important;
-    width:auto !important;
-    max-width:none !important;
-    max-height:min(49dvh,410px);
     overflow:auto;
     padding:9px;
     border-radius:23px;
@@ -1319,8 +1294,7 @@
 #page-note .note-actions .icon-btn{width:42px !important;height:42px !important;border-radius:14px !important;}
 #page-note .note-title{font-size:48px !important;}
 #page-note .save-status{font-size:13px !important;margin:10px 0 30px !important;}
-#page-note .editor-body{font-size:19px !important;line-height:1.82 !important;}
-@media (max-width: 760px){#page-note .breadcrumb{font-size:13px !important;}#page-note .note-title{font-size:40px !important;}#page-note .editor-body{font-size:18px !important;}}
+@media (max-width: 760px){#page-note .breadcrumb{font-size:13px !important;}#page-note .note-title{font-size:40px !important;}}
 
 /* Canonical interaction ownership */
 #page-note .note-toolbar, #page-note .command-menu, #page-note .format-menu, #page-note .more-menu, #page-note .link-picker{isolation:isolate}
@@ -1370,7 +1344,7 @@
     margin-bottom:16px !important;
   }
   #page-note .note-title{margin-top:8px !important}
-  #page-note :is(.command-menu,.link-picker){max-height:min(46vh,390px) !important}
+  #page-note .link-picker{max-height:min(46vh,390px) !important}
 }
 
 /* v2.8.0 secondary selection bubbles are always stacked ABOVE formatting. */
