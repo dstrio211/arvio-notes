@@ -485,46 +485,14 @@
             <strong>Anyone with the link</strong>
             <small>People can open this note without an Arvio account.</small>
           </div>
-          <button id="public-toggle" class="toggle-switch" aria-pressed="true">
+          <button id="public-toggle" class="toggle-switch" aria-pressed="false" aria-label="Anyone with the link">
             <span></span>
           </button>
         </div>
 
-        <div class="permission-wrap">
-          <span class="permission-label">Permission</span>
-          <button id="permission-button" class="permission-button">
-            <span id="permission-value">Viewer</span>
-            <span class="permission-chevron">⌄</span>
-          </button>
-          <div id="permission-menu" class="permission-menu" hidden>
-            <button data-permission="Viewer" class="permission-choice active">
-              <span>
-                <strong>Viewer</strong>
-                <small>Can read, cannot edit.</small>
-              </span>
-              <span>✓</span>
-            </button>
-            <button data-permission="Editor" class="permission-choice">
-              <span>
-                <strong>Editor</strong>
-                <small>Can edit after logging in.</small>
-              </span>
-              <span></span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="share-section people-section">
-        <div class="share-section-title">People with access</div>
-        <div class="person-row">
-          <div class="person-avatar initial-blue">D</div>
-          <div class="person-copy">
-            <strong>David</strong>
-            <small>Owner</small>
-          </div>
-          <span class="owner-label">Owner</span>
-        </div>
+        <p>Viewer · Can read, cannot edit.</p>
+        <p id="share-status" role="status" aria-live="polite"></p>
+        <input id="share-link-value" type="url" aria-label="Shared note link" readonly hidden>
       </div>
 
       <div class="share-actions">
@@ -536,18 +504,6 @@
 
     </div>
   </div>
-
-  <div id="shared-preview" class="shared-preview" hidden>
-    <div class="shared-preview-bar">
-      <div>
-        <strong>Shared note</strong>
-        <span id="shared-preview-copy">You’re viewing this note as a guest.</span>
-      </div>
-      <button id="shared-login-cta">Log in to edit</button>
-      <button id="shared-preview-close" aria-label="Close shared preview">×</button>
-    </div>
-  </div>
-
 
   <div id="logout-overlay" class="logout-overlay" hidden>
     <div class="logout-sheet" role="dialog" aria-modal="true" aria-labelledby="logout-title">
@@ -566,6 +522,6 @@
     </div>
   </div>
 
-  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/entry.js"></script>
 </body>
 </html>

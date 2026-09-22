@@ -3741,19 +3741,32 @@ let commandKeyboardIndex=0;
 
 function getSlashContext(){
   const sel=window.getSelection();
-  if(!sel || !sel.rangeCount || !sel.isCollapsed) return null;
+  if(!sel?.rangeCount || !sel.isCollapsed) return null;
   const range=sel.getRangeAt(0);
-  const node=range.startContainer;
-  if(node.nodeType!==Node.TEXT_NODE) return null;
-
-  const before=node.data.slice(0,range.startOffset);
-  const match=before.match(/\/([a-z]*)$/i);
+  if(!editorBody.contains(range.startContainer)) return null;
+  const element=range.startContainer.nodeType===Node.TEXT_NODE
+    ? range.startContainer.parentElement : range.startContainer;
+  const block=element.closest("p,div,li,h1,h2,h3,blockquote") || editorBody;
+  if(block!==editorBody && !editorBody.contains(block)) return null;
+  const prefix=range.cloneRange();
+  prefix.selectNodeContents(block);
+  prefix.setEnd(range.startContainer,range.startOffset);
+  const text=prefix.toString();
+  const match=text.match(/\/([a-z ]*)$/i);
   if(!match) return null;
-
-  const tokenRange=document.createRange();
-  tokenRange.setStart(node,range.startOffset-match[0].length);
-  tokenRange.setEnd(node,range.startOffset);
-  return {term:match[1].toLowerCase(),range:tokenRange};
+  // Map the token back across text nodes, including Safari's element caret boundary.
+  let offset=text.length-match[0].length;
+  const walker=document.createTreeWalker(block,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+    if(offset<node.data.length){
+      const token=range.cloneRange();
+      token.setStart(node,offset);
+      return {term:match[1].toLowerCase(),range:token};
+    }
+    offset-=node.data.length;
+  }
+  return null;
 }
 
 function placeCommandNearCaret(){
@@ -3785,8 +3798,8 @@ function renderMobileSpacingCommand(){
   button.setAttribute("aria-checked",String(mobileParagraphSpacing));
   button.querySelector(".return-mode-state").textContent=mobileParagraphSpacing ? "ON" : "OFF";
   button.querySelector("small").textContent=mobileParagraphSpacing
-    ? "Return starts a new paragraph"
-    : "Return starts a new line (Shift+Enter)";
+    ? "Mobile Return: new paragraph"
+    : "Mobile Return: new line (Shift+Enter)";
 }
 renderMobileSpacingCommand();
 
@@ -3795,7 +3808,7 @@ function filterSlashCommands(term=""){
   const buttons=[...commandMenu.querySelectorAll("[data-command]")];
 
   const meta={
-    "paragraph-spacing":{title:"paragraph spacing",keywords:["spacing","return","enter","shift","line","paragraph"],index:5},
+    "paragraph-spacing":{title:"paragraph spacing",keywords:["spacing","return","enter","shift","line","paragraph"],index:-1},
     link:{title:"link", keywords:["link","internal","note","connect"], index:0},
     image:{title:"image", keywords:["image","photo","picture"], index:1},
     highlight:{title:"highlight", keywords:["highlight","marker","stabilo"], index:2},
@@ -3826,7 +3839,7 @@ function filterSlashCommands(term=""){
     .map(btn=>{
       const cmd=btn.dataset.command;
       const score=scoreCommand(cmd, term);
-      const matches=(!term || score>0) && (cmd!=="paragraph-spacing" || mobileReturnMode());
+      const matches=!term || score>0;
       btn.classList.toggle("command-hidden", !matches);
       btn.classList.remove("keyboard-active");
       return {btn, cmd, score, matches, index:meta[cmd]?.index ?? 99};
@@ -3849,20 +3862,40 @@ function filterSlashCommands(term=""){
   if(visible[commandKeyboardIndex]) visible[commandKeyboardIndex].btn.classList.add("keyboard-active");
   return visible.map(v=>v.btn);
 }
-editorBody.addEventListener("input",()=>{
+function refreshSlashMenu(){
   const ctx=getSlashContext();
   if(ctx){
     activeSlashRange=ctx.range.cloneRange();
-    commandKeyboardIndex=0;
     filterSlashCommands(ctx.term);
     placeCommandNearCaret();
     arvioHideFixedPopover(formatMenu);
-    arvioShowFixedPopover(commandMenu);
+    if(commandMenu.hidden || !commandMenu.classList.contains("is-open")) arvioShowFixedPopover(commandMenu);
   }else{
     activeSlashRange=null;
     arvioHideFixedPopover(commandMenu);
   }
+}
+let slashRefreshFrame=0;
+function scheduleSlashRefresh(){
+  cancelAnimationFrame(slashRefreshFrame);
+  slashRefreshFrame=requestAnimationFrame(refreshSlashMenu);
+}
+editorBody.addEventListener("input",scheduleSlashRefresh);
+editorBody.addEventListener("compositionend",scheduleSlashRefresh);
+document.addEventListener("selectionchange",()=>{
+  if(document.activeElement===editorBody) scheduleSlashRefresh();
 });
+function updateSlashViewport(){
+  const vv=window.visualViewport;
+  const bottom=Math.max(0,window.innerHeight-((vv?.offsetTop || 0)+(vv?.height || window.innerHeight)));
+  commandMenu.style.setProperty("--slash-bottom",`${bottom+10}px`);
+  commandMenu.style.setProperty("--slash-max-height",`${Math.max(60,(vv?.height || window.innerHeight)-80)}px`);
+}
+window.visualViewport?.addEventListener("resize",updateSlashViewport);
+window.visualViewport?.addEventListener("scroll",updateSlashViewport);
+window.addEventListener("resize",updateSlashViewport);
+updateSlashViewport();
+
 
 
 const highlightColors = [
@@ -4357,7 +4390,6 @@ editorBody.addEventListener("paste",e=>{
 
 function applyCommand(cmd){
   if(cmd==="paragraph-spacing"){
-    if(!mobileReturnMode()) return;
     editorBody.focus({preventScroll:true});
     if(activeSlashRange && editorBody.contains(activeSlashRange.commonAncestorContainer)){
       const selection=window.getSelection();
@@ -4395,6 +4427,7 @@ function applyCommand(cmd){
   arvioHideFixedPopover(formatMenu);
 }
 commandMenu.querySelectorAll("button[data-command]").forEach(b=>{
+  b.addEventListener("pointerdown",e=>e.preventDefault());
   b.addEventListener("mousedown",e=>e.preventDefault());
   b.addEventListener("click",()=>applyCommand(b.dataset.command));
 });
@@ -4405,14 +4438,14 @@ editorBody.addEventListener("keydown",e=>{
     if(e.key==="ArrowDown" && visible.length){
       e.preventDefault();
       commandKeyboardIndex = commandKeyboardIndex < 0 ? 0 : (commandKeyboardIndex+1)%visible.length;
-      filterSlashCommands(getSlashContext()?.term||"");
+      visible.forEach((button,index)=>button.classList.toggle("keyboard-active",index===commandKeyboardIndex));
     }else if(e.key==="ArrowUp" && visible.length){
       e.preventDefault();
       commandKeyboardIndex = commandKeyboardIndex < 0 ? visible.length-1 : (commandKeyboardIndex-1+visible.length)%visible.length;
-      filterSlashCommands(getSlashContext()?.term||"");
+      visible.forEach((button,index)=>button.classList.toggle("keyboard-active",index===commandKeyboardIndex));
     }else if(e.key==="Enter" && visible.length){
       e.preventDefault();
-      visible[commandKeyboardIndex]?.click();
+      visible[Math.max(0,commandKeyboardIndex)]?.click();
     }else if(e.key==="Escape"){
       e.preventDefault();
       activeSlashRange=null;
@@ -4565,210 +4598,137 @@ document.addEventListener("pointerdown", e=>{
 });
 
 
-/* Share flow */
+/* Share flow: persisted public viewer links; existing sheet and motion owner. */
 const shareOverlay=document.querySelector("#share-overlay");
 const shareClose=document.querySelector("#share-close");
 const publicToggle=document.querySelector("#public-toggle");
-const permissionButton=document.querySelector("#permission-button");
-const permissionMenu=document.querySelector("#permission-menu");
-const permissionValue=document.querySelector("#permission-value");
 const copyShareLink=document.querySelector("#copy-share-link");
 const previewShared=document.querySelector("#preview-shared");
-const sharedPreview=document.querySelector("#shared-preview");
-const sharedPreviewCopy=document.querySelector("#shared-preview-copy");
-const sharedPreviewClose=document.querySelector("#shared-preview-close");
-
-let sharePermission="Viewer";
+const shareStatus=document.querySelector("#share-status");
+const shareLinkField=document.querySelector("#share-link-value");
 let shareCloseTimer=0;
-let permissionCloseTimer=0;
-let sharedPreviewCloseTimer=0;
-let copyShareTimers=[];
+let shareRun=0;
+let shareNoteId=null;
+let shareRow=null;
+let shareBusy=false;
 
-function clearCopyShareTimers(){
-  copyShareTimers.forEach(clearTimeout);
-  copyShareTimers=[];
-}
-function resetCopyShareFeedback(){
-  clearCopyShareTimers();
-  if(!copyShareLink) return;
-  const label=copyShareLink.querySelector(".copy-label");
-  if(label) label.textContent="Copy link";
-  copyShareLink.classList.remove("copied","copy-transition");
-  copyShareLink.dataset.copying="false";
-}
-
-function syncShareNoteMeta(){
-  const title=document.querySelector(".note-title")?.value || "Untitled";
-
-  // Read the active breadcrumb from the editor itself.
-  // This avoids depending on a separate currentNotePath variable.
-  const crumbNames=[...document.querySelectorAll(".note-breadcrumb .crumb")]
-    .map(el=>el.textContent.trim())
-    .filter(Boolean);
-
-  let breadcrumb=crumbNames.length ? crumbNames.join(" › ") : "";
-
-  // Fallback for the initial static breadcrumb before a Library note has been opened.
-  if(!breadcrumb){
-    const raw=document.querySelector(".breadcrumb")?.textContent || "";
-    breadcrumb=raw
-      .split("›")
-      .map(part=>part.trim())
-      .filter(Boolean)
-      .join(" › ");
-  }
-
-  document.querySelector("#share-title").textContent=title;
-  document.querySelector(".share-path").textContent=breadcrumb || title;
+function renderShareControls(message=""){
+  const enabled=Boolean(shareRow?.token);
+  publicToggle.setAttribute("aria-pressed",String(enabled));
+  publicToggle.disabled=shareBusy || !shareNoteId || !cloudConfigured;
+  copyShareLink.disabled=shareBusy || !enabled;
+  previewShared.disabled=shareBusy || !enabled;
+  shareStatus.textContent=message;
+  shareLinkField.hidden=!enabled;
+  shareLinkField.value=enabled ? new URL(`/?share=${shareRow.token}`,location.origin).href : "";
+  copyShareLink.querySelector(".copy-label").textContent="Copy link";
 }
 
-function openShareSheet(){
+async function openShareSheet(){
+  const run=++shareRun;
   clearTimeout(shareCloseTimer);
   shareOverlay.classList.remove("is-closing");
-  syncShareNoteMeta();
+  const found=findActiveLibraryNote();
+  shareNoteId=found?.node?.id || null;
+  shareRow=null;
+  document.querySelector("#share-title").textContent=noteTitleInput.value || "Untitled";
+  document.querySelector(".share-path").textContent=activeNotePath.join(" › ");
   shareOverlay.hidden=false;
+  shareBusy=true;
+  renderShareControls("Checking link access…");
   requestAnimationFrame(()=>requestAnimationFrame(()=>shareOverlay.classList.add("is-open")));
+  try{
+    if(!cloudConfigured) throw new Error("Connect Supabase to share notes.");
+    if(!shareNoteId) throw new Error("Open a saved note before sharing.");
+    const rows=await cloudTable("arvio_note_shares",{query:`?note_id=eq.${encodeURIComponent(shareNoteId)}&select=token&limit=1`});
+    if(run!==shareRun) return;
+    shareRow=rows?.[0] || null;
+    shareBusy=false;
+    renderShareControls(shareRow ? "Anyone with this link can read this note." : "Turn on link access to share this note.");
+  }catch(error){
+    if(run!==shareRun) return;
+    shareBusy=false;
+    renderShareControls(shareErrorMessage(error));
+  }
 }
 
-function closePermissionMenu(){
-  if(permissionMenu.hidden) return;
-  clearTimeout(permissionCloseTimer);
-  permissionMenu.classList.remove("is-open");
-  permissionMenu.classList.add("is-closing");
-  permissionCloseTimer=setTimeout(()=>{
-    permissionMenu.hidden=true;
-    permissionMenu.classList.remove("is-closing");
-    permissionCloseTimer=0;
-  },ARVIO_MOTION.popClose);
+function shareErrorMessage(error){
+  if(error.status===404 || /arvio_note_shares|schema cache/i.test(error.message)) return "Sharing is not set up yet. Run the v3.7.6 sharing SQL in Supabase, then reopen Share.";
+  return error.name==="AbortError" ? "Connection timed out. Please try again." : error.message || "Sharing failed. Please try again.";
 }
 
 function closeShareSheet(){
-  closePermissionMenu();
+  ++shareRun;
   clearTimeout(shareCloseTimer);
   shareOverlay.classList.remove("is-open");
   shareOverlay.classList.add("is-closing");
   shareCloseTimer=setTimeout(()=>{
     shareOverlay.hidden=true;
     shareOverlay.classList.remove("is-closing");
-    shareCloseTimer=0;
-    resetCopyShareFeedback();
   },ARVIO_MOTION.shareClose);
 }
 
-document.querySelectorAll(".share-btn").forEach(btn=>{
-  btn.addEventListener("click",openShareSheet);
-});
-
-shareClose.addEventListener("click",closeShareSheet);
-
-shareOverlay.addEventListener("mousedown",e=>{
-  if(e.target===shareOverlay) closeShareSheet();
-});
-
-publicToggle.addEventListener("click",()=>{
-  const next=publicToggle.getAttribute("aria-pressed")!=="true";
-  publicToggle.setAttribute("aria-pressed",String(next));
-});
-
-permissionButton.addEventListener("click",e=>{
-  e.stopPropagation();
-
-  if(!permissionMenu.hidden){
-    closePermissionMenu();
-    return;
-  }
-
-  clearTimeout(permissionCloseTimer);
-  permissionMenu.classList.remove("is-closing");
-  permissionMenu.hidden=false;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>permissionMenu.classList.add("is-open")));
-});
-
-permissionMenu.querySelectorAll("[data-permission]").forEach(choice=>{
-  choice.addEventListener("click",()=>{
-    sharePermission=choice.dataset.permission;
-    permissionValue.textContent=sharePermission;
-
-    permissionMenu.querySelectorAll("[data-permission]").forEach(x=>{
-      const active=x===choice;
-      x.classList.toggle("active",active);
-      x.lastElementChild.textContent=active ? "✓" : "";
-    });
-
-    closePermissionMenu();
+// Serialize with existing workspace writes, and include the latest editor record.
+async function syncWorkspaceForShare(noteId){
+  if(findActiveLibraryNote()?.node?.id!==noteId) throw new Error("Reopen Share for the current note.");
+  if(!await flushLocalSave({force:true})) throw new Error("Could not save this note. Please try again.");
+  const record=buildActiveNotePayload();
+  clearTimeout(cloudWorkspaceSyncTimer);
+  const write=cloudWorkspaceSyncChain.then(async()=>{
+    const session=await cloudAuth.getSession();
+    if(!session?.user?.id) throw new Error("Please log in to share notes.");
+    const payload=await cloudWorkspacePayload();
+    payload.notes=payload.notes.filter(item=>item.noteId!==record.noteId && item.key!==record.key);
+    payload.notes.push(record);
+    await cloudTable("arvio_workspaces",{method:"POST",query:"?on_conflict=owner_id",body:{owner_id:session.user.id,payload},headers:{Prefer:"resolution=merge-duplicates,return=minimal"}});
+    return session.user.id;
   });
-});
+  cloudWorkspaceSyncChain=write.catch(()=>{});
+  return write;
+}
 
-document.addEventListener("mousedown",e=>{
-  if(!permissionMenu.hidden && !permissionMenu.contains(e.target) && !e.target.closest("#permission-button")){
-    closePermissionMenu();
+document.querySelectorAll(".share-btn").forEach(btn=>btn.addEventListener("click",openShareSheet));
+shareClose.addEventListener("click",closeShareSheet);
+shareOverlay.addEventListener("mousedown",event=>{if(event.target===shareOverlay) closeShareSheet()});
+publicToggle.addEventListener("click",async()=>{
+  if(shareBusy) return;
+  const run=shareRun, noteId=shareNoteId, previous=shareRow;
+  shareBusy=true;
+  renderShareControls(previous ? "Removing link access…" : "Creating link…");
+  try{
+    if(previous){
+      await cloudTable("arvio_note_shares",{method:"DELETE",query:`?note_id=eq.${encodeURIComponent(noteId)}`});
+      if(run===shareRun) shareRow=null;
+    }else{
+      const ownerId=await syncWorkspaceForShare(noteId);
+      const rows=await cloudTable("arvio_note_shares",{method:"POST",query:"?on_conflict=owner_id,note_id",body:{owner_id:ownerId,note_id:noteId},headers:{Prefer:"resolution=ignore-duplicates,return=representation"}});
+      const row=rows?.[0] || (await cloudTable("arvio_note_shares",{query:`?note_id=eq.${encodeURIComponent(noteId)}&select=token&limit=1`}))?.[0];
+      if(!row?.token) throw new Error("Link creation failed. Try again.");
+      if(run===shareRun) shareRow=row;
+    }
+    if(run!==shareRun) return;
+    shareBusy=false;
+    renderShareControls(shareRow ? "Link ready. Anyone with the link can read this note." : "Link revoked. The old link no longer opens this note.");
+  }catch(error){
+    if(run!==shareRun) return;
+    shareBusy=false;
+    renderShareControls(shareErrorMessage(error));
   }
 });
-
 copyShareLink.addEventListener("click",async()=>{
-  if(copyShareLink.dataset.copying==="true") return;
-  copyShareLink.dataset.copying="true";
-
-  const label=copyShareLink.querySelector(".copy-label");
-  const fakeLink="https://arvio.app/shared/toyota-avanza-overview";
-
+  if(!shareRow || shareBusy) return;
   try{
-    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(fakeLink);
-  }catch{}
-
-  // Fade the current label out first so the state change feels deliberate.
-  copyShareLink.classList.add("copy-transition");
-
-  clearCopyShareTimers();
-  copyShareTimers.push(setTimeout(()=>{
-    label.textContent="Copied";
-    copyShareLink.classList.remove("copy-transition");
-    copyShareLink.classList.add("copied");
-
-    copyShareTimers.push(setTimeout(()=>{
-      copyShareLink.classList.add("copy-transition");
-
-      copyShareTimers.push(setTimeout(()=>{
-        label.textContent="Copy link";
-        copyShareLink.classList.remove("copied","copy-transition");
-        copyShareLink.dataset.copying="false";
-      },150));
-    },1050));
-  },150));
+    await navigator.clipboard.writeText(shareLinkField.value);
+    copyShareLink.querySelector(".copy-label").textContent="Copied";
+    shareStatus.textContent="Link copied.";
+  }catch{
+    shareLinkField.focus();
+    shareLinkField.select();
+    shareStatus.textContent="Copy the selected link manually.";
+  }
 });
-
 previewShared.addEventListener("click",()=>{
-  closeShareSheet();
-
-  setTimeout(()=>{
-    document.body.classList.add("shared-guest-mode");
-    sharedPreviewCopy.textContent=
-      sharePermission==="Editor"
-        ? "Editor access is available after logging in."
-        : "You’re viewing this note as a guest. Editing is disabled.";
-
-    sharedPreview.hidden=false;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>sharedPreview.classList.add("is-open")));
-  },180);
-});
-
-sharedPreviewClose.addEventListener("click",()=>{
-  clearTimeout(sharedPreviewCloseTimer);
-  sharedPreview.classList.remove("is-open");
-  sharedPreviewCloseTimer=setTimeout(()=>{
-    sharedPreview.hidden=true;
-    document.body.classList.remove("shared-guest-mode");
-    sharedPreviewCloseTimer=0;
-  },ARVIO_MOTION.shareClose);
-});
-
-document.querySelector("#shared-login-cta").addEventListener("click",()=>{
-  // Prototype only: return to the normal signed-in editor.
-  sharedPreview.classList.remove("is-open");
-  setTimeout(()=>{
-    sharedPreview.hidden=true;
-    document.body.classList.remove("shared-guest-mode");
-  },220);
+  if(shareRow && !shareBusy) window.open(shareLinkField.value,"_blank","noopener,noreferrer");
 });
 
 

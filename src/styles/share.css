@@ -855,3 +855,8 @@ body.shared-guest-mode .save-status{
 #share-title,.share-path{max-width:100%;overflow-wrap:anywhere}
 .share-path{white-space:normal}
 .permission-menu.is-closing{pointer-events:none}
+
+/* Persisted share link feedback; share-sheet remains the sole layout owner. */
+#share-status{font-size:13px;line-height:1.5;color:#afc2d0;overflow-wrap:anywhere}
+#share-link-value{box-sizing:border-box;width:100%;min-width:0;padding:10px;border:1px solid #354752;border-radius:10px;background:#0c1217;color:#d2e8f5;font-size:13px}
+.share-sheet button:disabled{opacity:.45;cursor:default}

@@ -52,7 +52,7 @@ See `CODE-AUDIT-v3.7.0.md` for ownership review and validation scope, and `DEPLO
 - Vanilla JavaScript and Vite. GitHub is the source of truth; Vercel deploys `main`.
 - Notes and hierarchy remain local-first with an optional Supabase cloud copy per authenticated user. See `SUPABASE-SETUP.md`.
 - Authentication uses Supabase email and password when both Vercel environment variables are present. It remains a local prototype session when they are absent.
-- Sharing UI has no cross-user persistence.
+- Public read-only sharing uses Supabase token links. Run `supabase/share-v3.7.6.sql` once; see `UPDATE-v3.7.6.md`. Editor collaboration is not implemented.
 - Service-worker fetch interception remains disabled. Existing recovery behavior is preserved.
 - Mobile Home / Library / Profile navigation, safe areas and logo assets are preserved.
 

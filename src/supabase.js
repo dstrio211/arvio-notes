@@ -106,3 +106,10 @@ export async function cloudTable(table,{method="GET",query="",body,headers={}}={
   if(!session?.user?.id) throw new Error("Please log in to sync your notes.");
   return request(`/rest/v1/${table}${query}`,{method,body,token:session.access_token,headers});
 }
+
+// Guest RPC deliberately uses only the publishable key, never a stored session.
+export async function readSharedNote(token){
+  if(!cloudConfigured) throw new Error("Sharing is not configured on this site.");
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token||"")) return null;
+  return request("/rest/v1/rpc/arvio_read_shared_note",{method:"POST",body:{share_token:token}});
+}
