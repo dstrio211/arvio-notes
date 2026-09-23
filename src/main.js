@@ -1105,11 +1105,7 @@ function createDraftAtPath(parentPath=[]){
   noteRevision=0;
   savedNoteRevision=0;
 
-  if(!renderOnly) activatePage("note");
-  else{
-    quickAccessActiveId=node.id;
-    renderQuickAccess({pressedId:node.id});
-  }
+  activatePage("note");
   setNoteBreadcrumb(path);
 
   const titleInput=document.querySelector(".note-title");
@@ -2111,7 +2107,11 @@ function openArvioNote(path,{noteId=null,transition=false,renderOnly=false}={}){
   savedNoteRevision=0;
   markNoteOpened(path,node.id);
 
-  activatePage("note");
+  if(!renderOnly) activatePage("note");
+  else{
+    quickAccessActiveId=node.id;
+    renderQuickAccess({pressedId:node.id});
+  }
   setNoteBreadcrumb(path);
 
   document.querySelector(".note-title").value=node?.title || path[path.length-1];

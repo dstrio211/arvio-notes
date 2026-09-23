@@ -1,0 +1,9 @@
+Arvio v3.7.11 patch for repositories already on v3.7.10.
+
+Extract and replace these exact paths in your GitHub repository, then commit to main. Confirm the latest Vercel Production deployment is Ready. Search View Page Source for 3.7.11-quick-access-transition to verify the deployed version. No SQL or environment variable changes.
+
+Fix: During a Quick Access note-to-note switch, the note renderer must not call activatePage a second time. That call cancelled the ongoing page fade and left the editor at opacity zero. The renderer now updates the note content and selected pinned row inside the existing transition, allowing fade-out then fade-in to complete.
+
+Also correct a previous regression in createDraftAtPath where an accidental renderOnly reference could prevent new note creation.
+
+Validation: npm run build, node --check src/main.js, and static CSS/duplicate audit passed. Local Chromium browser test exercised Enter login, home greetings, desktop sidebar, Quick Access swapping, rapid selections, navigation interruption, and mobile sidebar. It asserts the note is active with computed opacity 1 once the fade settles. This tests the local build; deploy status depends on your GitHub/Vercel workflow.
