@@ -2185,7 +2185,7 @@ function renderTree(nodes,parentPath=[]){
                                   <span class="dot" aria-hidden="true"></span>
                                   <span class="tree-copy">
                                     <span class="tree-name">${escapeHtml(grand.title)}</span>
-                                    ${grand.body?`<small class="tree-meta">${escapeHtml(grand.body)}</small>`:""}
+                                    ${grand.body?`<small class="tree-meta tree-preview">${escapeHtml(libraryNotePreview(grand.body))}</small>`:""}
                                   </span>
                                 </button>
                                 <span class="tree-row-rail tree-leaf-rail">
@@ -2203,7 +2203,7 @@ function renderTree(nodes,parentPath=[]){
                           <span class="dot" aria-hidden="true"></span>
                           <span class="tree-copy">
                             <span class="tree-name">${escapeHtml(child.title)}</span>
-                            ${child.body?`<small class="tree-meta">${escapeHtml(child.body)}</small>`:""}
+                            ${child.body?`<small class="tree-meta tree-preview">${escapeHtml(libraryNotePreview(child.body))}</small>`:""}
                           </span>
                         </button>
                         <span class="tree-row-rail tree-leaf-rail">
@@ -2439,6 +2439,12 @@ function renderLibrarySearch(query){
       }).join("")}
     </section>
   `;
+}
+
+function libraryNotePreview(body){
+  const text=String(body || "").replace(/\s+/g," ").trim();
+  if(text.length<=220) return text;
+  return `${text.slice(0,220).trimEnd()}…`;
 }
 
 function renderLibrary(query=""){

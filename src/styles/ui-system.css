@@ -72,7 +72,7 @@ body #workspace #page-library .library-head{margin-bottom:var(--ui-flow-gap)!imp
 
 /* Profile rhythm */
 #workspace #page-profile .profile-panel{margin-top:var(--ui-flow-gap)!important;padding:30px!important}
-#workspace #page-profile .profile-identity{gap:18px!important;padding:0 0 24px!important}
+#workspace #page-profile .profile-identity{gap:18px!important;padding:0!important}
 #workspace #page-profile .avatar{width:92px!important;height:92px!important;font-size:34px!important}
 #workspace #page-profile .profile-identity-copy strong{font-size:22px!important;line-height:1.15!important}
 #workspace #page-profile .profile-identity-copy span{margin-top:5px!important;font-size:14px!important;line-height:1.45!important}

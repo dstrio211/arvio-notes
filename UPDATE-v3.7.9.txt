@@ -1,0 +1,24 @@
+Arvio v3.7.9 — cumulative patch from v3.7.7
+
+INSTALL
+Extract this ZIP and replace files at their existing repository paths. Upload the contents, not the ZIP or an extra enclosing folder. Commit to main. In Vercel, confirm the latest Production deployment uses that commit and is Ready.
+View page source after deployment and search for: 3.7.9-library-single-line
+No SQL migration is required. Do not clear localStorage or IndexedDB.
+
+CHANGES
+Library child and grandchild previews: one line with ellipsis on desktop and mobile. Renderer normalizes preview whitespace and limits the derived excerpt to 220 characters plus ellipsis. Stored content and editor content remain intact. Dedicated tree-preview geometry is owned by library.css.
+Boot: inline dark background and hidden body are present in initial HTML. Entry awaits route imports/CSS before revealing the page; import failure presents a dark retry screen.
+Includes the previous Profile simplification and white-text red logout so this patch can be applied directly over v3.7.7.
+
+DEPLOYMENT FINDING
+The public site inspected on 2026-09-23 still served main-CV0RFjew.css from v3.7.7. Its JavaScript contained no tree-preview marker, and its HTML lacked data-arvio-boot. That deployed snapshot did not contain the latest preview or startup fixes.
+
+VALIDATION
+Vite production build passed.
+Browser tests passed at 1440, 1920 and 390px using the real Library renderer, expanded child/grandchild notes, full editor content checks and runtime error checks. Desktop screenshot inspected.
+Production-browser tests passed at desktop/mobile viewport sizes with CSS deliberately held: dark background, hidden unstyled body, reveal after loading, and import-failure retry. Profile identity and logout confirmation passed.
+These are local Chromium tests, not a physical iPhone or authenticated live Supabase test.
+
+STATIC AUDIT
+16 CSS files parsed without errors. No duplicate HTML IDs or top-level JavaScript function names. No malformed !important commas.
+15 cross-file exact selector/property overlaps remain in historical layout/typography rules, including separate guest/workspace styles. This count does not imply 15 visible defects; the whole codebase is not claimed conflict-free. No unrelated CSS refactor was performed. Preview geometry has one dedicated owner.

@@ -143,10 +143,11 @@
   width:calc(100% - 32px);
   margin:18px 16px 16px;
   padding:14px 14px;
-  border:1px solid rgba(255,112,120,.13);
+  border:1px solid #ed5663;
   border-radius:13px;
-  background:rgba(255,85,95,.035);
-  color:#ff747c;
+  background:#d93249;
+  box-shadow:0 0 22px rgba(225,48,72,.2);
+  color:#fff;
   font-size:13px;
   font-weight:680;
   text-align:left;
@@ -158,8 +159,8 @@
     color 170ms ease;
 }
 .logout:hover{
-  color:#ffb4b9;
-  background:linear-gradient(180deg,rgba(255,89,99,.13),rgba(255,89,99,.055));
+  color:#fff;
+  background:#e63a51;
   border-color:rgba(255,116,124,.30);
   box-shadow:
     0 0 0 1px rgba(255,116,124,.07),

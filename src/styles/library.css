@@ -39,6 +39,17 @@
 .tree-child .dot{width:5px;height:5px;border-radius:50%;background:#5d6875;}
 .tree-child:hover .dot{background:var(--blue);box-shadow:0 0 10px var(--blue-strong);}
 .tree-child small{color:#5f6976;}
+/* Preview geometry has one owner. The renderer never changes stored note content. */
+#page-library .tree-child .tree-preview{
+  display:block;
+  min-width:0;
+  max-width:100%;
+  max-height:1.42em;
+  max-block-size:1lh;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
 .search-match{background:rgba(112,200,255,.18);color:#eaf7ff;border-radius:3px;}
 .tree-row, .tree-child{
   -webkit-tap-highlight-color:transparent;
