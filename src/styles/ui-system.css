@@ -35,8 +35,6 @@ body #workspace .page{max-width:1120px;padding-left:var(--ui-page-inline);paddin
 }
 
 /* Sidebar type */
-#workspace .sidebar .nav-item{font-size:15px!important;line-height:1.25!important}
-#workspace .sidebar .section-label{font-size:11px!important;line-height:1.25!important}
 
 
 /* Home rhythm */

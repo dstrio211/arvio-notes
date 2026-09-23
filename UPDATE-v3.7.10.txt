@@ -1,0 +1,16 @@
+Arvio v3.7.10. Apply over v3.7.9.
+
+Extract and upload these files to the matching paths in GitHub. Commit to main and wait for the latest Vercel Production deployment to become Ready. No SQL or environment-variable changes are required.
+Build marker in page source: 3.7.10-sidebar-auth.
+
+Changes:
+Home greeting uses the device local hour: Morning before 12:00, Afternoon from 12:00 to 17:59, Evening from 18:00. Refreshes when returning to Home or the browser tab. Uses the current display name.
+Enter in either login input calls the existing form submit flow with native validation, duplicate-submit protection and the existing Opening Arvio animation.
+Desktop sidebar is 280px wide. Logo is 180px wide, navigation labels 18px, Quick Access heading 13px, pinned titles 17px and locations 12px. Main content typography is unchanged. Raster logo remains unfiltered and untransformed.
+Pinned rows reuse existing navigation hover, press and selected lighting styles. Sidebar font sizes no longer compete with ui-system.css overrides.
+Quick Access note swaps use the existing page fade-out/fade-in timing and cancellation. Saving precedes switching. Rapid navigation cancels an earlier queued transition.
+
+Validation:
+Production build and JavaScript syntax check passed. CSS parsed without errors, no duplicate HTML IDs/top-level JS function names or malformed important declarations. Quick Access has one stylesheet owner and no same-scope property redefinitions. Historical CSS overlaps outside this scope remain.
+Local Chromium browser tests passed: keyboard login and Opening Arvio, three local-time greetings, desktop sizes, identical selected navigation material, old content during fade-out, new content after fade, rapid note switching, navigation cancellation, mobile sidebar hidden, no runtime errors. Desktop screenshot inspected.
+Login test used the local prototype path. Live Supabase credentials and a physical iPhone were not tested.

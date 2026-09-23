@@ -24,7 +24,7 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
 .secondary-btn:hover{transform:translateY(-2px);background:rgba(92,181,255,.105);border-color:rgba(135,205,255,.34);box-shadow:0 0 30px var(--blue-glow-strong),inset 0 0 20px rgba(120,205,255,.045);}
 #workspace{display:grid;grid-template-columns:250px minmax(0,1fr);height:100vh;overflow:hidden;}
 .sidebar{border-right:1px solid var(--border);padding:28px 16px;display:flex;flex-direction:column;gap:28px;height:100vh;position:sticky;top:0;overflow:hidden;}
-.brand-side{font-size:34px;padding:0 12px 12px;}.primary-nav{display:grid;gap:6px;}.nav-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:#a9b3c0;font-weight:560;transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .16s ease;}.nav-item span{font-size:19px;width:22px;text-align:center;}.nav-icon{display:grid;place-items:center;}.nav-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}.nav-item.active{color:var(--text);background:linear-gradient(100deg,rgba(218,239,255,.13),rgba(218,239,255,.04));box-shadow:0 0 30px var(--blue-glow-strong),inset 0 0 0 1px rgba(150,215,255,.11);}.section-label{font-size:10px;letter-spacing:.16em;color:#69717d;padding:0 13px 7px;}
+.brand-side{font-size:34px;padding:0 12px 12px;}.primary-nav{display:grid;gap:6px;}:is(.nav-item,.sidebar-link){display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:#a9b3c0;font-weight:560;transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .16s ease;}:is(.nav-item,.sidebar-link) span{font-size:19px;width:22px;text-align:center;}.nav-icon{display:grid;place-items:center;}.nav-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}:is(.nav-item,.sidebar-link).active{color:var(--text);background:linear-gradient(100deg,rgba(218,239,255,.13),rgba(218,239,255,.04));box-shadow:0 0 30px var(--blue-glow-strong),inset 0 0 0 1px rgba(150,215,255,.11);}.section-label{font-size:10px;letter-spacing:.16em;color:#69717d;padding:0 13px 7px;}
 /* Quick Access: canonical text-list geometry and material. Shared motion tokens apply. */
 .quick-access{
   display:flex;
@@ -34,6 +34,8 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
   gap:2px;
 }
 .quick-access-list{
+  padding:18px 16px;
+  margin:-18px -16px;
   display:grid;
   align-content:start;
   gap:2px;
@@ -46,38 +48,34 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
   display:block;
   width:100%;
   min-width:0;
-  padding:9px 13px;
+  padding:12px 13px;
   border-radius:var(--radius-compact);
   text-align:left;
-  color:#aeb6c1;
-  font-size:14px;
+  font-size:17px;
   line-height:1.35;
   font-weight:550;
 }
-.quick-access button:hover,
-.quick-access button:focus-visible,
-.quick-access button[aria-current="page"]{
-  background:rgba(184,225,255,.055);
-  color:var(--text);
-}
-.quick-access-title,
-.quick-access-location{
+.quick-access .quick-access-title{font-size:inherit;}
+.quick-access .quick-access-title,
+.quick-access .quick-access-location{
+  width:100%;
+  text-align:left;
   display:block;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.quick-access-location{
+.quick-access .quick-access-location{
   margin-top:2px;
   color:#75828e;
-  font-size:10.5px;
+  font-size:12px;
   font-weight:400;
 }
 .quick-access-empty{
   margin:0;
   padding:8px 13px;
   color:#75828e;
-  font-size:12px;
+  font-size:14px;
   line-height:1.5;
 }
 
@@ -96,9 +94,9 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
 /* Arvio interaction feedback */
 button{ -webkit-tap-highlight-color: transparent; }
 button:focus-visible{ outline: 1px solid rgba(143,210,255,.55); outline-offset: 2px; }
-.nav-item:hover{color:#eaf7ff;background:rgba(72,177,255,.09);box-shadow:0 0 26px rgba(72,177,255,.22),inset 0 0 14px rgba(72,177,255,.05);}
-.nav-item:active{transform:scale(.975);box-shadow:0 0 42px var(--blue-glow-strong),inset 0 0 20px rgba(72,177,255,.14);}
-.nav-item.active .nav-icon{filter:drop-shadow(0 0 7px rgba(114,199,255,.72));}
+:is(.nav-item,.sidebar-link):hover{color:#eaf7ff;background:rgba(72,177,255,.09);box-shadow:0 0 26px rgba(72,177,255,.22),inset 0 0 14px rgba(72,177,255,.05);}
+:is(.nav-item,.sidebar-link):active{transform:scale(.975);box-shadow:0 0 42px var(--blue-glow-strong),inset 0 0 20px rgba(72,177,255,.14);}
+:is(.nav-item,.sidebar-link).active .nav-icon{filter:drop-shadow(0 0 7px rgba(114,199,255,.72));}
 
 /* Note editor v0.5 */
 
@@ -180,7 +178,7 @@ button:focus-visible{ outline: 1px solid rgba(143,210,255,.55); outline-offset: 
 
 
 /* v1.0 — Arvio motion language: soft, springy, iOS-inspired */
-button, .nav-item, .quick-link{
+button, :is(.nav-item,.sidebar-link), .quick-link{
   -webkit-tap-highlight-color:transparent;
 }
 
@@ -196,7 +194,7 @@ button:active{
   transform:scale(.965);
 }
 
-.nav-item:active{
+:is(.nav-item,.sidebar-link):active{
   transform:scale(.985);
 }
 
@@ -288,7 +286,7 @@ button:focus-visible{
 }
 
 /* Make the selected nav state feel like it moves with the page. */
-.nav-item.active{
+:is(.nav-item,.sidebar-link).active{
   transition:
     color 220ms ease,
     background 280ms cubic-bezier(.16,1,.3,1),
@@ -461,7 +459,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar{
 
 /* Once a section is selected, hovering it should feel calmer than hovering
    an unselected item. No extra jump/translation — just a stable illuminated shell. */
-.nav-item.active:hover{
+:is(.nav-item,.sidebar-link).active:hover{
   color:#fbfdff;
   transform:none;
   background:
@@ -474,7 +472,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar{
 }
 
 /* The selected icon stays optically stable while the pointer remains over it. */
-.nav-item.active:hover .nav-icon{
+:is(.nav-item,.sidebar-link).active:hover .nav-icon{
   color:#f7fcff;
   filter:
     drop-shadow(0 0 5px rgba(190,230,255,.72))
@@ -507,13 +505,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar{
       inset 0 0 0 1px rgba(150,215,255,.11);
   }
 }
-.nav-item.active.arvio-click-feedback{
+:is(.nav-item,.sidebar-link).active.arvio-click-feedback{
   animation:arvioSelectedNavPress 420ms cubic-bezier(.16,1,.3,1);
 }
 
 /* Unselected nav hover is allowed to "invite" the click a bit more.
    Selected hover is intentionally steadier, so the two states feel different. */
-.nav-item:not(.active):hover{
+:is(.nav-item,.sidebar-link):not(.active):hover{
   background:linear-gradient(100deg,rgba(72,177,255,.105),rgba(72,177,255,.035));
   box-shadow:
     0 0 25px rgba(72,177,255,.20),
@@ -824,15 +822,15 @@ html::-webkit-scrollbar, body::-webkit-scrollbar{
 }
 
 /* Selected section: swap from outline -> filled icon with a tiny soft bloom. */
-.nav-item.active .nav-icon .icon-outline{
+:is(.nav-item,.sidebar-link).active .nav-icon .icon-outline{
   opacity:0;
   transform:scale(.86);
 }
-.nav-item.active .nav-icon .icon-fill{
+:is(.nav-item,.sidebar-link).active .nav-icon .icon-fill{
   opacity:1;
   transform:scale(1);
 }
-.nav-item.active .nav-icon{
+:is(.nav-item,.sidebar-link).active .nav-icon{
   color:#ffffff;
   filter:
     drop-shadow(0 0 5px rgba(220,242,255,.82))
@@ -840,20 +838,20 @@ html::-webkit-scrollbar, body::-webkit-scrollbar{
 }
 
 /* Once it is no longer selected, it returns cleanly to the thin outline state. */
-.nav-item:not(.active) .nav-icon{
+:is(.nav-item,.sidebar-link):not(.active) .nav-icon{
   color:currentColor;
   filter:none;
 }
-.nav-item:not(.active):hover .nav-icon{
+:is(.nav-item,.sidebar-link):not(.active):hover .nav-icon{
   color:#c7eaff;
   filter:drop-shadow(0 0 7px rgba(77,183,255,.20));
 }
 
 /* Keep the filled icon stable during the post-click selected-hover state. */
-.nav-item.active:hover .nav-icon .icon-fill{
+:is(.nav-item,.sidebar-link).active:hover .nav-icon .icon-fill{
   transform:scale(1.035);
 }
-.nav-item.active:hover .nav-icon .icon-outline{
+:is(.nav-item,.sidebar-link).active:hover .nav-icon .icon-outline{
   opacity:0;
 }
 
@@ -2282,7 +2280,7 @@ body{
 
 
 .primary-btn, .secondary-btn{border-radius:16px !important;}
-.nav-item{border-radius:16px !important;}
+:is(.nav-item,.sidebar-link){border-radius:16px !important;}
 
 .icon-btn{border-radius:14px !important;}
 
@@ -3356,7 +3354,7 @@ body{
 
 @media (min-width:761px){
   #workspace{
-    grid-template-columns:224px minmax(0,1fr);
+    grid-template-columns:280px minmax(0,1fr);
   }
 
   .sidebar{
@@ -3375,27 +3373,27 @@ body{
     gap:7px;
   }
 
-  .primary-nav .nav-item{
-    min-height:46px;
-    padding:11px 13px;
+  .primary-nav :is(.nav-item,.sidebar-link){
+    min-height:54px;
+    padding:14px 16px;
     gap:11px;
     border-radius:15px;
-    font-size:15px;
+    font-size:18px;
     line-height:1.25;
     font-weight:590;
   }
 
-  .primary-nav .nav-item .nav-icon, .primary-nav .nav-item .nav-icon svg{
-    width:18px;
-    height:18px;
+  .primary-nav :is(.nav-item,.sidebar-link) .nav-icon, .primary-nav :is(.nav-item,.sidebar-link) .nav-icon svg{
+    width:22px;
+    height:22px;
   }
 
   
 
   .section-label{
     padding:4px 13px 8px;
-    font-size:10px;
-    line-height:1.2;
+    font-size:13px;
+    line-height:1.25;
     letter-spacing:.18em;
   }
 

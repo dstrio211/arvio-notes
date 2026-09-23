@@ -340,8 +340,16 @@ document.querySelectorAll("[data-auth-back]").forEach(btn=>{
   btn.addEventListener("click",()=>switchAuthStage(btn.dataset.authBack,{back:true}));
 });
 
-document.querySelector("#login-form").addEventListener("submit",async e=>{
+const loginForm=document.querySelector("#login-form");
+loginForm.addEventListener("keydown",e=>{
+  if(e.key!=="Enter" || e.isComposing || e.repeat || !e.target.matches("input")) return;
   e.preventDefault();
+  loginForm.requestSubmit(document.querySelector("#login-submit"));
+});
+loginForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const submit=document.querySelector("#login-submit");
+  if(submit.disabled || submit.dataset.launching==="true") return;
   clearAuthMessages();
   const email=document.querySelector("#login-email").value.trim();
   const password=document.querySelector("#login-password").value;
@@ -349,6 +357,7 @@ document.querySelector("#login-form").addEventListener("submit",async e=>{
     setAuthMessage("login","Enter your email and password to continue.");
     return;
   }
+  submit.disabled=true;
   try{
     if(cloudConfigured){
       const session=await cloudAuth.signInWithPassword({email,password});
@@ -362,6 +371,7 @@ document.querySelector("#login-form").addEventListener("submit",async e=>{
     }
     launchWorkspaceFromAuth(document.querySelector("#login-submit"));
   }catch(error){ setAuthMessage("login",error.message || "Unable to sign in."); }
+  finally{ submit.disabled=false; }
 });
 
 document.querySelector("#signup-form").addEventListener("submit",e=>{
@@ -445,12 +455,22 @@ confirmEmailButton.addEventListener("click",e=>{
   },760);
 });
 
+function updateHomeGreeting(name){
+  const title=document.querySelector("#page-home h1");
+  if(!title) return;
+  if(name) title.dataset.displayName=name;
+  const hour=new Date().getHours();
+  const greeting=hour<12 ? "Good Morning" : hour<18 ? "Good Afternoon" : "Good Evening";
+  title.textContent=`${greeting}, ${title.dataset.displayName || "David"}.`;
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) updateHomeGreeting();});
+window.addEventListener("pageshow",()=>updateHomeGreeting());
+
 function applyPrototypeDisplayName(name){
   const clean=(name||"David").trim() || "David";
   const initial=clean.charAt(0).toUpperCase();
 
-  const homeTitle=document.querySelector("#page-home h1");
-  if(homeTitle) homeTitle.textContent=`Good afternoon, ${clean}.`;
+  updateHomeGreeting(clean);
 
   document.querySelectorAll("#profile-display-name,#profile-display-heading").forEach(el=>{
     if(el) el.textContent=clean;
@@ -792,7 +812,7 @@ function normalizePageTransitionState(){
   });
 }
 
-function activatePage(page){
+function activatePage(page,{refresh=false,beforeEnter=null}={}){
   const next=document.querySelector(`#page-${page}`);
   if(!next) return;
   quickAccessOpenRun+=1;
@@ -827,7 +847,7 @@ function activatePage(page){
   document.body.classList.toggle("create-route-active",page==="create");
   screens.workspace?.classList.toggle("create-route-active",page==="create");
   quickAccessActiveId=page==="note" ? activeLocalNoteKey.replace(/^noteid:/,"") : null;
-  renderQuickAccess();
+  renderQuickAccess({pressedId:quickAccessActiveId});
 
   // Latest tap always owns nav state immediately.
   document.querySelectorAll(".nav-item").forEach(n=>{
@@ -849,7 +869,7 @@ function activatePage(page){
 
   // Double-tapping the current tab is harmless: keep the route and capsule
   // exactly where they already are.
-  if(next===current) return;
+  if(next===current && !refresh) return;
 
   if(current) current.classList.add("page-leaving");
 
@@ -864,6 +884,7 @@ function activatePage(page){
     const main=document.querySelector(".main");
     if(main) main.scrollTo({top:0,behavior:"instant"});
 
+    beforeEnter?.();
     next.classList.add("active","page-entering");
 
     requestAnimationFrame(()=>{
@@ -1084,7 +1105,11 @@ function createDraftAtPath(parentPath=[]){
   noteRevision=0;
   savedNoteRevision=0;
 
-  activatePage("note");
+  if(!renderOnly) activatePage("note");
+  else{
+    quickAccessActiveId=node.id;
+    renderQuickAccess({pressedId:node.id});
+  }
   setNoteBreadcrumb(path);
 
   const titleInput=document.querySelector(".note-title");
@@ -1437,7 +1462,7 @@ function findLibraryNodeById(id,nodes=libraryTree,parentPath=[]){
   return null;
 }
 
-function renderQuickAccess(){
+function renderQuickAccess({pressedId=null}={}){
   const list=document.querySelector("#quick-access-list");
   if(!list) return;
   list.setAttribute("aria-busy",String(!libraryStateHydrated));
@@ -1447,7 +1472,7 @@ function renderQuickAccess(){
   // Resolve only the live tree. Trash pins retain their position without rendering.
   list.innerHTML=entries.length ? entries.map(({node,path})=>{
     const location=path.slice(0,-1).join(" › ") || "Library";
-    return `<button type="button" data-quick-access-id="${escapeHtml(node.id)}"
+    return `<button class="sidebar-link ${node.id===quickAccessActiveId?"active":""} ${node.id===pressedId?"arvio-click-feedback":""}" type="button" data-quick-access-id="${escapeHtml(node.id)}"
       title="${escapeHtml(path.join(" › "))}" ${node.id===quickAccessActiveId?'aria-current="page"':""}>
       <span class="quick-access-title">${escapeHtml(node.title)}</span>
       <span class="quick-access-location">${escapeHtml(location)}</span>
@@ -1471,7 +1496,7 @@ document.querySelector("#quick-access-list")?.addEventListener("click",async e=>
   }
   if(run!==quickAccessOpenRun) return;
   // Re-resolve after saving: editing the current parent may have changed this path.
-  openArvioNote(null,{noteId:id});
+  openArvioNote(null,{noteId:id,transition:true});
 });
 
 function parseArvioTimestamp(value){
@@ -2066,7 +2091,11 @@ function updateTopicEditorMode(node){
   body.setAttribute("contenteditable",String(!titleOnly));
 }
 
-function openArvioNote(path,{noteId=null}={}){
+function openArvioNote(path,{noteId=null,transition=false,renderOnly=false}={}){
+  if(transition && document.querySelector("#page-note.active")){
+    activatePage("note",{refresh:true,beforeEnter:()=>openArvioNote(path,{noteId,renderOnly:true})});
+    return;
+  }
   const found=noteId ? findLibraryNodeById(noteId) : findLibraryNode(path);
   if(!found) return;
   path=found.path;
@@ -2328,6 +2357,7 @@ function homeEntrySnippet(entry){
 }
 
 function renderHomeDashboard(){
+  updateHomeGreeting();
   const continueCard=document.querySelector("#home-continue-note");
   const recentList=document.querySelector("#home-recent-list");
   if(!continueCard || !recentList) return;
