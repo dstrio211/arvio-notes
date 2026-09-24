@@ -3418,7 +3418,7 @@ body{
 
   .quick-access{
     flex:1 1 0;
-    overflow:hidden;
+    overflow:visible;
   }
 
   .section-label{
@@ -3518,7 +3518,6 @@ body{
 
 
 /* Filter sheet text is scaled here too so it cannot inherit tiny legacy values. */
-
 
 
 
