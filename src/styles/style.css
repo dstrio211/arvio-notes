@@ -27,23 +27,47 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
 .brand-side{font-size:34px;padding:0 12px 12px;}.primary-nav{display:grid;gap:6px;}:is(.nav-item,.sidebar-link){display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:#a9b3c0;font-weight:560;transition:background .22s ease,color .22s ease,box-shadow .22s ease,transform .16s ease;}:is(.nav-item,.sidebar-link) span{font-size:19px;width:22px;text-align:center;}.nav-icon{display:grid;place-items:center;}.nav-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}:is(.nav-item,.sidebar-link).active{color:var(--text);background:linear-gradient(100deg,rgba(218,239,255,.13),rgba(218,239,255,.04));box-shadow:0 0 30px var(--blue-glow-strong),inset 0 0 0 1px rgba(150,215,255,.11);}.section-label{font-size:10px;letter-spacing:.16em;color:#69717d;padding:0 13px 7px;}
 /* Quick Access: canonical text-list geometry and material. Shared motion tokens apply. */
 .quick-access{
+  position:relative;
   display:flex;
   flex-direction:column;
   min-height:0;
   min-width:0;
+  flex:1 1 auto;
   gap:2px;
 }
 .quick-access-list{
-  padding:18px 16px;
-  margin:-18px -16px;
+  padding:10px 16px 18px;
+  margin:0 -16px -18px;
   display:grid;
   align-content:start;
   gap:2px;
   min-height:0;
   overflow-y:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
   overscroll-behavior:contain;
-  scrollbar-width:thin;
 }
+.quick-access-list::-webkit-scrollbar{display:none;}
+
+.quick-access::before,.quick-access::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;
+  height:22px;
+  z-index:3;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 160ms ease;
+}
+.quick-access::before{
+  top:32px;
+  background:linear-gradient(180deg,#050608 5%,rgba(5,6,8,.78) 42%,transparent);
+}
+.quick-access::after{
+  bottom:0;
+  background:linear-gradient(0deg,#050608 5%,rgba(5,6,8,.78) 42%,transparent);
+}
+.quick-access.has-scroll-top::before,.quick-access.has-scroll-bottom::after{opacity:1;}
 .quick-access button{
   display:block;
   width:100%;
@@ -3371,6 +3395,8 @@ body{
 
   .primary-nav{
     gap:7px;
+    margin-top:auto;
+    flex:none;
   }
 
   .primary-nav :is(.nav-item,.sidebar-link){
@@ -3389,6 +3415,11 @@ body{
   }
 
   
+
+  .quick-access{
+    flex:1 1 0;
+    overflow:hidden;
+  }
 
   .section-label{
     padding:4px 13px 8px;

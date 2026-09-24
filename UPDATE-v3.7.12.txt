@@ -1,0 +1,9 @@
+Arvio v3.7.12 patch for repositories on v3.7.11.
+
+Extract the ZIP and upload each file to the same path in GitHub. Commit to main, then wait for Vercel Production to become Ready. View page source and look for 3.7.12-sidebar-home-mobile. No SQL or environment changes are required.
+
+Desktop sidebar: Arvio logo first, Quick Access second, and Home/Library/Profile pinned at the bottom. The Quick Access list alone scrolls. Its browser scrollbar is hidden. The top and bottom fade indicators appear only when content is clipped on that edge.
+
+Home: removed the duplicate “Pick up where you left off” sentence and kept “Continue where you left off”. Mobile greeting reduced to a 36–40px range. Home, Library and Profile headings move below the mobile status blur using the safe-area inset. The mobile Log out button is shorter and narrower; text remains 16px.
+
+Validation: Vite production build passed. Browser tests passed at 1440px desktop and 390px mobile for sidebar order, fixed navigation, independent Quick Access scrolling, hidden scrollbar, edge fades, single Home continuation prompt, reduced greeting, page heading position, compact logout and preserved logout font. CSS parse passed in the Vite build. A separate Python static audit could not be rerun because its tinycss2 dependency was unavailable in the active runtime.

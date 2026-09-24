@@ -119,6 +119,7 @@ body .logout-sheet p{font-size:var(--ui-dialog-body)!important;line-height:1.5!i
   }
   body #workspace .page{padding-left:var(--ui-page-inline)!important;padding-right:var(--ui-page-inline)!important;padding-bottom:var(--ui-page-bottom)!important}
   #workspace :is(#page-home,#page-library,#page-profile) h1{font-size:var(--ui-page-title)!important;line-height:.98!important}
+  #workspace #page-home h1{font-size:clamp(36px,9vw,40px)!important;line-height:1.04!important}
   #workspace #page-home .new-note{min-height:96px!important;padding:18px!important}
   #workspace #page-home :is(.note-card,.recent-list button){padding:19px 18px!important}
   #workspace #page-library .tree-row{min-height:68px!important;padding-top:13px!important;padding-bottom:13px!important}
@@ -166,10 +167,10 @@ body .logout-sheet p{font-size:var(--ui-dialog-body)!important;line-height:1.5!i
 @media(max-width:760px){
   #workspace #page-profile .logout{
     width:max-content!important;
-    min-width:118px!important;
-    min-height:48px!important;
-    margin:20px 0 0!important;
-    padding:13px 19px!important;
+    min-width:0!important;
+    min-height:40px!important;
+    margin:16px 0 0!important;
+    padding:9px 14px!important;
     font-size:16px!important;
   }
 }

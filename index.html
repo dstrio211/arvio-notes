@@ -15,7 +15,7 @@
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preload" as="image" href="/arvio-logo.png" fetchpriority="high" />
-  <meta name="arvio-build" content="3.7.11-quick-access-transition" />
+  <meta name="arvio-build" content="3.7.12-sidebar-home-mobile" />
   <title>Arvio</title>
   <script>
     // v3.4.4 — one-time production cache recovery.
@@ -163,6 +163,12 @@
       <div class="mobile-status-scrim" aria-hidden="true"></div>
       <aside class="sidebar">
         <div class="brand brand-side"><img src="/arvio-logo.png" loading="eager" decoding="sync" fetchpriority="high" alt="Arvio" class="brand-logo sidebar-brand-logo"></div>
+        <section class="quick-access" aria-labelledby="quick-access-label">
+          <div class="section-label" id="quick-access-label">QUICK ACCESS</div>
+          <div class="quick-access-list" id="quick-access-list" aria-busy="true">
+            <p class="quick-access-empty">Loading pinned notes…</p>
+          </div>
+        </section>
         <nav class="primary-nav" aria-label="Primary">
           <button class="nav-item active" data-page="home"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
   <g class="icon-outline">
@@ -195,12 +201,6 @@
   </g>
 </svg></span>Profile</button>
         </nav>
-        <section class="quick-access" aria-labelledby="quick-access-label">
-          <div class="section-label" id="quick-access-label">QUICK ACCESS</div>
-          <div class="quick-access-list" id="quick-access-list" aria-busy="true">
-            <p class="quick-access-empty">Loading pinned notes…</p>
-          </div>
-        </section>
       </aside>
 
       <main class="main">
@@ -212,7 +212,6 @@
         <div id="page-home" class="page active">
           <p class="eyebrow">HOME</p>
           <h1>Welcome to Arvio.</h1>
-          <p class="lead">Pick up where you left off.</p>
 
           <button class="new-note" id="new-note">
             <span>＋</span>

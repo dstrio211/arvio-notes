@@ -4,7 +4,7 @@
 
 html{
   --nav-page-top-desktop:10px;
-  --nav-page-top-mobile:6px;
+  --nav-page-top-mobile:calc(max(env(safe-area-inset-top),22px) + 58px);
   --nav-page-label-size-desktop:12px;
   --nav-page-label-size-mobile:11px;
   --nav-page-label-bottom-desktop:12px;
