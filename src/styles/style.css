@@ -64,8 +64,9 @@ button{color:inherit;border:0;background:none;cursor:pointer;}
   background:linear-gradient(180deg,#050608 5%,rgba(5,6,8,.78) 42%,transparent);
 }
 .quick-access::after{
-  bottom:0;
-  background:linear-gradient(0deg,#050608 5%,rgba(5,6,8,.78) 42%,transparent);
+  bottom:-18px;
+  height:54px;
+  background:linear-gradient(0deg,#050608 8%,rgba(5,6,8,.94) 28%,rgba(5,6,8,.55) 65%,transparent);
 }
 .quick-access.has-scroll-top::before,.quick-access.has-scroll-bottom::after{opacity:1;}
 .quick-access button{
@@ -3518,7 +3519,6 @@ body{
 
 
 /* Filter sheet text is scaled here too so it cannot inherit tiny legacy values. */
-
 
 
 
